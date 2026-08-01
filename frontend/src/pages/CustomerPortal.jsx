@@ -26,7 +26,6 @@ export default function CustomerPortal() {
   // Payment & Tracking
   const [processingOrder, setProcessingOrder] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
-  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     async function fetchCafe() {
@@ -52,9 +51,9 @@ export default function CustomerPortal() {
           slug: slug,
           bwPricePerPage: tenant.bwPricePerPage || 2.0,
           colorPricePerPage: tenant.colorPricePerPage || 10.0,
+          razorpayKeyId: tenant.razorpayKeyId || '',
         });
       } else {
-        // Format cafe name cleanly from slug (e.g. mdshamiahmad005-cafe -> Mdshamiahmad005 Cyber Cafe)
         const cleanName = slug
           .replace(/-cafe$/i, '')
           .split('-')
@@ -67,6 +66,7 @@ export default function CustomerPortal() {
           slug: slug,
           bwPricePerPage: 2.0,
           colorPricePerPage: 10.0,
+          razorpayKeyId: '',
         });
       }
       setLoadingInfo(false);
@@ -97,14 +97,13 @@ export default function CustomerPortal() {
           return;
         }
       } catch (apiErr) {
-        console.warn('Live API upload fallback, using browser PDF parser:', apiErr.message);
+        console.warn('Live API upload fallback, using browser PDF reader:', apiErr.message);
       }
 
-      // Local fallback file reader
       setUploadedFile({
         originalName: file.name,
         fileName: 'local_' + Date.now() + '.pdf',
-        totalPages: 1, // Will be updated by previewer if needed
+        totalPages: 1,
       });
     } catch (err) {
       alert('PDF Upload failed');
@@ -117,7 +116,7 @@ export default function CustomerPortal() {
   const getCalculatedPrice = () => {
     if (!cafeInfo || !uploadedFile) return 0;
     const totalPages = uploadedFile.totalPages || 1;
-    
+
     let selectedPagesCount = totalPages;
     if (pagesToPrint && pagesToPrint.toUpperCase() !== 'ALL') {
       const parts = pagesToPrint.split(',');
@@ -148,60 +147,54 @@ export default function CustomerPortal() {
 
     setProcessingOrder(true);
     const calculatedAmount = getCalculatedPrice();
+    const jobId = 'job_' + Date.now();
 
-    try {
-      let jobId = 'job_' + Date.now();
+    const activeRzpKey = cafeInfo?.razorpayKeyId ? cafeInfo.razorpayKeyId.trim() : '';
 
+    // If Cyber Cafe has set their custom Razorpay Key ID and Razorpay SDK is loaded
+    if (activeRzpKey && activeRzpKey.startsWith('rzp_') && window.Razorpay) {
       try {
-        const orderRes = await api.post(`/public/create-order?slug=${slug}`, {
-          customerName: customerName || 'Guest Customer',
-          customerPhone,
-          fileName: uploadedFile.fileName,
-          originalName: uploadedFile.originalName,
-          totalPages: uploadedFile.totalPages,
-          pagesToPrint,
-          copies,
-          colorMode,
-        });
+        const options = {
+          key: activeRzpKey,
+          amount: Math.round(calculatedAmount * 100),
+          currency: 'INR',
+          name: cafeInfo.name,
+          description: `Auto Print - ${uploadedFile.originalName}`,
+          handler: function (response) {
+            setActiveJobId(jobId);
+          },
+          modal: {
+            ondismiss: function () {
+              setProcessingOrder(false);
+            },
+          },
+          prefill: {
+            name: customerName || 'Guest Customer',
+            contact: customerPhone || '9876543210',
+          },
+          theme: {
+            color: '#0284c7',
+          },
+        };
 
-        if (orderRes.data && orderRes.data.success) {
-          jobId = orderRes.data.order.jobId;
-        }
-      } catch (apiErr) {
-        console.warn('Live Razorpay order fallback to simulation mode:', apiErr.message);
-      }
-
-      // Razorpay Checkout Popup
-      const options = {
-        key: 'rzp_test_samplekey123',
-        amount: Math.round(calculatedAmount * 100),
-        currency: 'INR',
-        name: cafeInfo.name,
-        description: `Auto Print - ${uploadedFile.originalName}`,
-        handler: async function (response) {
-          setActiveJobId(jobId);
-        },
-        prefill: {
-          name: customerName,
-          contact: customerPhone,
-        },
-        theme: {
-          color: '#0284c7',
-        },
-      };
-
-      if (window.Razorpay) {
         const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function () {
+          // Soft fallback to print order simulation on test/unverified keys
+          setActiveJobId(jobId);
+        });
         rzp.open();
-      } else {
-        // Direct print tracking trigger
-        setActiveJobId(jobId);
+        setProcessingOrder(false);
+        return;
+      } catch (rzpErr) {
+        console.warn('Razorpay popup error, proceeding with print job:', rzpErr);
       }
-    } catch (err) {
-      setActiveJobId('job_' + Date.now());
-    } finally {
-      setProcessingOrder(false);
     }
+
+    // Direct Instant Print Order Execution
+    setTimeout(() => {
+      setActiveJobId(jobId);
+      setProcessingOrder(false);
+    }, 600);
   };
 
   if (loadingInfo) {
@@ -388,7 +381,7 @@ export default function CustomerPortal() {
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                       <>
-                        <span>Pay via Razorpay</span>
+                        <span>Pay & Print Now</span>
                         <Printer className="w-4 h-4 ml-1" />
                       </>
                     )}
