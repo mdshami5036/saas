@@ -18,31 +18,30 @@ export default function CafeLogin() {
     setErrorMsg('');
 
     try {
-      // 1. Try Firebase Auth first
       let idToken = null;
-      let firebaseUser = null;
-
       try {
         const userCred = await signInWithEmailAndPassword(auth, email, password);
-        firebaseUser = userCred.user;
-        idToken = await firebaseUser.getIdToken();
+        idToken = await userCred.user.getIdToken();
       } catch (fbErr) {
         console.warn('Firebase Email Sign In fallback to local DB:', fbErr.message);
       }
 
-      // 2. Sync / Authenticate with Backend API
       const res = await api.post('/auth/firebase-login', {
         idToken,
         email,
         name: email.split('@')[0],
       });
 
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Login failed. Please check credentials.');
+      if (err.response?.status === 405) {
+        setErrorMsg('Backend API server not connected. Please set VITE_API_BASE_URL in Vercel settings to your live backend API URL.');
+      } else {
+        setErrorMsg(err.response?.data?.error || 'Login failed. Please check credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -63,13 +62,17 @@ export default function CafeLogin() {
         name: user.displayName || user.email.split('@')[0],
       });
 
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
       }
     } catch (err) {
       console.error('Google Sign In Error:', err);
-      setErrorMsg('Google Sign In failed: ' + err.message);
+      if (err.response?.status === 405) {
+        setErrorMsg('Backend API server not connected. Please set VITE_API_BASE_URL in Vercel settings to your live backend URL.');
+      } else {
+        setErrorMsg('Google Sign In failed: ' + (err.response?.data?.error || err.message));
+      }
     } finally {
       setLoading(false);
     }
