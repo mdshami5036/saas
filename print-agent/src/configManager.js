@@ -5,6 +5,8 @@ const os = require('os');
 const CONFIG_DIR = path.join(os.homedir(), 'AppData', 'Roaming', 'AutoPrintAgent');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
+const DEFAULT_CLOUD_BACKEND = 'https://saas-nine-ochre.vercel.app';
+
 function ensureConfigDir() {
   if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
@@ -16,13 +18,17 @@ function loadConfig() {
     ensureConfigDir();
     if (fs.existsSync(CONFIG_PATH)) {
       const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (parsed && parsed.backendUrl === 'http://localhost:5000') {
+        parsed.backendUrl = DEFAULT_CLOUD_BACKEND;
+      }
+      return parsed;
     }
   } catch (err) {
     console.warn('[Config] Warning loading config file:', err.message);
   }
   return {
-    backendUrl: 'http://localhost:5000',
+    backendUrl: DEFAULT_CLOUD_BACKEND,
     agentToken: '',
     selectedPrinter: '',
     isConfigured: false,
@@ -52,4 +58,5 @@ module.exports = {
   loadConfig,
   saveConfig,
   CONFIG_PATH,
+  DEFAULT_CLOUD_BACKEND,
 };
