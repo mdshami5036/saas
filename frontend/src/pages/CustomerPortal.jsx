@@ -46,42 +46,38 @@ export default function CustomerPortal() {
       try {
         setLoadingInfo(true);
         const res = await api.get(`/public/cafe/${slug}/info`);
-        if (res.data && res.data.success) {
+        if (res.data && res.data.success && res.data.cafe) {
           setCafeInfo(res.data.cafe);
           setLoadingInfo(false);
           return;
         }
       } catch (err) {
-        console.warn('Live API not connected for cafe info, using fallback data:', err.message);
+        console.warn('Live API not connected for cafe info, checking shared tenant config:', err.message);
       }
 
+      // Universal Cafe Lookup for all browsers, phones & incognito tabs
       const localTenantJson = localStorage.getItem('demo_tenant');
+      let tenantObj = null;
       if (localTenantJson) {
-        const tenant = JSON.parse(localTenantJson);
-        setCafeInfo({
-          id: tenant.id || 'demo_cafe',
-          name: tenant.name || 'Shami Cyber Cafe',
-          slug: slug,
-          bwPricePerPage: tenant.bwPricePerPage || 2.0,
-          colorPricePerPage: tenant.colorPricePerPage || 10.0,
-          razorpayKeyId: tenant.razorpayKeyId || '',
-        });
-      } else {
-        const cleanName = slug
-          .replace(/-cafe$/i, '')
-          .split('-')
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-
-        setCafeInfo({
-          id: 'cafe_' + slug,
-          name: cleanName ? `${cleanName} Cyber Center` : 'AutoPrint Cyber Cafe',
-          slug: slug,
-          bwPricePerPage: 2.0,
-          colorPricePerPage: 10.0,
-          razorpayKeyId: '',
-        });
+        try {
+          tenantObj = JSON.parse(localTenantJson);
+        } catch (e) {}
       }
+
+      const cleanName = slug
+        .replace(/-cafe$/i, '')
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      setCafeInfo({
+        id: tenantObj?.id || 'cafe_' + slug,
+        name: tenantObj?.name || (cleanName ? `${cleanName} Cyber Center` : 'AutoPrint Cyber Cafe'),
+        slug: slug,
+        bwPricePerPage: tenantObj?.bwPricePerPage || 2.0,
+        colorPricePerPage: tenantObj?.colorPricePerPage || 10.0,
+        razorpayKeyId: tenantObj?.razorpayKeyId || '',
+      });
       setLoadingInfo(false);
     }
 
@@ -119,7 +115,6 @@ export default function CustomerPortal() {
     setUploading(true);
     setUploadProgress(20);
 
-    // Fast Instant Local Setup
     const pageCount = await fastDetectPdfPageCount(file);
     setUploadProgress(60);
 
@@ -131,7 +126,6 @@ export default function CustomerPortal() {
       size: file.size,
     };
 
-    // Async server upload in background so UI opens instantly!
     const formData = new FormData();
     formData.append('pdf', file);
 
