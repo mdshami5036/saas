@@ -2,16 +2,17 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY start.sh ./
-COPY backend ./backend
+COPY backend/package*.json ./backend/
+COPY backend/prisma ./backend/prisma/
 
-RUN chmod +x start.sh
-RUN cd backend && npm install && npx prisma generate
+RUN cd backend && npm install
+RUN cd backend && npx prisma generate --schema=prisma/schema.prisma
+
+COPY backend ./backend/
 
 EXPOSE 5000
 
 ENV PORT=5000
 ENV NODE_ENV=production
 
-CMD ["./start.sh"]
+CMD ["sh", "-c", "cd backend && npx prisma db push --schema=prisma/schema.prisma && node src/index.js"]
