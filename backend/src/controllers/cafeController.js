@@ -13,7 +13,6 @@ async function getDashboardData(req, res) {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    // Today's completed jobs count
     const todayPrintCount = await prisma.printJob.count({
       where: {
         tenantId: tenant.id,
@@ -22,7 +21,6 @@ async function getDashboardData(req, res) {
       },
     });
 
-    // Total revenue earned today
     const todayRevenueSum = await prisma.payment.aggregate({
       where: {
         tenantId: tenant.id,
@@ -32,7 +30,6 @@ async function getDashboardData(req, res) {
       _sum: { amount: true },
     });
 
-    // Active pending queue count
     const activeQueueCount = await prisma.printJob.count({
       where: {
         tenantId: tenant.id,
@@ -40,7 +37,6 @@ async function getDashboardData(req, res) {
       },
     });
 
-    // Devices & connected printers
     const devices = await prisma.device.findMany({
       where: { tenantId: tenant.id },
       orderBy: { lastSeenAt: 'desc' },
@@ -67,6 +63,8 @@ async function getDashboardData(req, res) {
         bwPricePerPage: tenant.bwPricePerPage,
         colorPricePerPage: tenant.colorPricePerPage,
         qrCodeUrl: tenant.qrCodeUrl,
+        razorpayKeyId: tenant.razorpayKeyId || '',
+        hasCustomRazorpay: !!(tenant.razorpayKeyId && tenant.razorpayKeySecret),
       },
       devices,
     });
@@ -102,10 +100,36 @@ async function updatePricing(req, res) {
   }
 }
 
+async function updateRazorpayCredentials(req, res) {
+  try {
+    const tenant = req.tenant;
+    const { razorpayKeyId, razorpayKeySecret } = req.body;
+
+    const updated = await prisma.tenant.update({
+      where: { id: tenant.id },
+      data: {
+        razorpayKeyId: razorpayKeyId ? razorpayKeyId.trim() : null,
+        razorpayKeySecret: razorpayKeySecret ? razorpayKeySecret.trim() : null,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: 'Custom Razorpay Merchant Account connected successfully!',
+      razorpay: {
+        razorpayKeyId: updated.razorpayKeyId,
+        hasCustomRazorpay: !!(updated.razorpayKeyId && updated.razorpayKeySecret),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: 'Failed to update Razorpay credentials' });
+  }
+}
+
 async function regenerateKeys(req, res) {
   try {
     const tenant = req.tenant;
-    const { target } = req.body; // 'API_KEY' or 'AGENT_TOKEN'
+    const { target } = req.body;
 
     let dataToUpdate = {};
     if (target === 'API_KEY') {
@@ -199,7 +223,6 @@ async function downloadPreconfiguredAgent(req, res) {
     const agentToken = tenant.agentToken;
     const cafeName = tenant.name;
 
-    // Create a pre-populated config JSON payload
     const preConfigJson = JSON.stringify(
       {
         backendUrl,
@@ -214,27 +237,6 @@ async function downloadPreconfiguredAgent(req, res) {
       2
     );
 
-    // Dynamic response offering JSON config bundle or batch launcher script
-    const launcherScript = `@echo off
-echo ========================================================
-echo   Auto-Print Agent Setup for: ${cafeName}
-echo ========================================================
-mkdir "%APPDATA%\\AutoPrintAgent" 2>nul
-(
-echo {
-echo   "backendUrl": "${backendUrl}",
-echo   "agentToken": "${agentToken}",
-echo   "cafeName": "${cafeName}",
-echo   "isPreConfigured": true
-echo }
-) > "%APPDATA%\\AutoPrintAgent\\config.json"
-
-echo.
-echo Connected successfully to ${cafeName}!
-echo Launching PrintAgent.exe...
-start "" PrintAgent.exe
-`;
-
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="PrintAgent-Config-${tenant.slug}.json"`);
     return res.send(preConfigJson);
@@ -246,6 +248,7 @@ start "" PrintAgent.exe
 module.exports = {
   getDashboardData,
   updatePricing,
+  updateRazorpayCredentials,
   regenerateKeys,
   getJobsHistory,
   getQrCode,

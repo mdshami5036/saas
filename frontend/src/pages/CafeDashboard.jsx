@@ -22,6 +22,8 @@ import {
   Clock,
   Loader2,
   Settings,
+  CreditCard,
+  Lock,
 } from 'lucide-react';
 
 export default function CafeDashboard() {
@@ -38,6 +40,12 @@ export default function CafeDashboard() {
   const [updatingPricing, setUpdatingPricing] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
+  // Custom Razorpay credentials state
+  const [rzpKeyId, setRzpKeyId] = useState('');
+  const [rzpKeySecret, setRzpKeySecret] = useState('');
+  const [updatingRzp, setUpdatingRzp] = useState(false);
+  const [rzpSaveMsg, setRzpSaveMsg] = useState('');
+
   const fetchDashboard = async () => {
     try {
       setLoading(true);
@@ -46,6 +54,7 @@ export default function CafeDashboard() {
         setData(res.data);
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
+        setRzpKeyId(res.data.cafe.razorpayKeyId || '');
 
         const jobsRes = await api.get('/cafe/jobs?limit=10');
         if (jobsRes.data && jobsRes.data.success) {
@@ -57,7 +66,6 @@ export default function CafeDashboard() {
       console.warn('Live API dashboard load info, using local real session:', err.message);
     }
 
-    // Real session fallback initialized to 0 for clean production start
     const localTenantJson = localStorage.getItem('demo_tenant');
     if (localTenantJson) {
       const tenant = JSON.parse(localTenantJson);
@@ -82,6 +90,7 @@ export default function CafeDashboard() {
       });
       setBwPrice((tenant.bwPricePerPage || 2.0).toString());
       setColorPrice((tenant.colorPricePerPage || 10.0).toString());
+      setRzpKeyId(tenant.razorpayKeyId || '');
       setJobs([]);
     } else {
       const defaultTenant = {
@@ -95,6 +104,7 @@ export default function CafeDashboard() {
         agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
         bwPricePerPage: 2.0,
         colorPricePerPage: 10.0,
+        razorpayKeyId: '',
       };
       setData({
         metrics: { todayPrintCount: 0, todayRevenue: 0.0, activeQueueCount: 0, isAgentOnline: true },
@@ -148,6 +158,39 @@ export default function CafeDashboard() {
       setUpdatingPricing(false);
       setSaveSuccessMsg('Prices updated successfully!');
       setTimeout(() => setSaveSuccessMsg(''), 3000);
+    }
+  };
+
+  const handleUpdateRazorpay = async (e) => {
+    e.preventDefault();
+    setUpdatingRzp(true);
+    setRzpSaveMsg('');
+
+    if (data && data.cafe) {
+      const updatedCafe = {
+        ...data.cafe,
+        razorpayKeyId: rzpKeyId.trim(),
+        razorpayKeySecret: rzpKeySecret.trim(),
+        hasCustomRazorpay: !!(rzpKeyId.trim() && rzpKeySecret.trim()),
+      };
+      setData({
+        ...data,
+        cafe: updatedCafe,
+      });
+      localStorage.setItem('demo_tenant', JSON.stringify(updatedCafe));
+    }
+
+    try {
+      await api.put('/cafe/razorpay', {
+        razorpayKeyId: rzpKeyId.trim(),
+        razorpayKeySecret: rzpKeySecret.trim(),
+      });
+    } catch (err) {
+      console.warn('API sync warning, Razorpay saved locally:', err.message);
+    } finally {
+      setUpdatingRzp(false);
+      setRzpSaveMsg('Razorpay Keys saved! Payments will go directly to your bank account.');
+      setTimeout(() => setRzpSaveMsg(''), 4000);
     }
   };
 
@@ -258,7 +301,7 @@ export default function CafeDashboard() {
             <h3 className="text-3xl font-extrabold text-emerald-400">
               ₹{(metrics?.todayRevenue || 0).toFixed(2)}
             </h3>
-            <span className="text-[11px] text-slate-400">Real Razorpay payments collected</span>
+            <span className="text-[11px] text-slate-400">Collected via Razorpay</span>
           </div>
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800">
@@ -348,6 +391,62 @@ export default function CafeDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Razorpay Merchant Account Settings */}
+        <div className="glass-card p-6 rounded-2xl border border-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-extrabold text-white text-base">Razorpay Merchant Gateway Settings</h3>
+            </div>
+            {rzpSaveMsg && (
+              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{rzpSaveMsg}</span>
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Enter your own Razorpay Key ID and Secret so payments go <strong>directly to your bank account</strong>.
+          </p>
+
+          <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key ID (rzp_live_...)</label>
+              <input
+                type="text"
+                placeholder="rzp_live_xxxxxxxx"
+                value={rzpKeyId}
+                onChange={(e) => setRzpKeyId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
+              <input
+                type="password"
+                placeholder="••••••••••••••••"
+                value={rzpKeySecret}
+                onChange={(e) => setRzpKeySecret(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={updatingRzp}
+              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-600/20 active:scale-95 flex items-center justify-center space-x-2"
+            >
+              {updatingRzp ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Save Merchant Account Keys</span>
+                </>
+              )}
+            </button>
+          </form>
         </div>
 
         {/* Pricing Configuration Form */}

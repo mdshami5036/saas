@@ -20,21 +20,23 @@ model Admin {
 }
 
 model Tenant {
-  id                String   @id @default(uuid())
-  name              String
-  slug              String   @unique
-  email             String   @unique
-  passwordHash      String
-  phone             String?
-  apiKey            String   @unique
-  agentToken        String   @unique
-  status            String   @default("ACTIVE") // ACTIVE, DISABLED, SUSPENDED
-  bwPricePerPage    Float    @default(2.0)
-  colorPricePerPage Float    @default(10.0)
-  customWebsiteUrl  String?
-  qrCodeUrl         String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  name               String
+  slug               String   @unique
+  email              String   @unique
+  passwordHash       String
+  phone              String?
+  apiKey             String   @unique
+  agentToken         String   @unique
+  status             String   @default("ACTIVE")
+  bwPricePerPage     Float    @default(2.0)
+  colorPricePerPage  Float    @default(10.0)
+  razorpayKeyId      String?  // Cyber Cafe's own Razorpay Key ID
+  razorpayKeySecret  String?  // Cyber Cafe's own Razorpay Key Secret
+  customWebsiteUrl   String?
+  qrCodeUrl          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   devices   Device[]
   printJobs PrintJob[]
@@ -70,10 +72,10 @@ model PrintJob {
   totalPages    Int
   pagesToPrint  String
   copies        Int       @default(1)
-  colorMode     String    @default("BW") // BW, COLOR
+  colorMode     String    @default("BW")
   totalPrice    Float
-  paymentStatus String    @default("PENDING") // PENDING, SUCCESS, FAILED
-  jobStatus     String    @default("PENDING") // PENDING, SENT_TO_AGENT, PRINTING, COMPLETED, FAILED, PRINTER_OFFLINE, EXPIRED
+  paymentStatus String    @default("PENDING")
+  jobStatus     String    @default("PENDING")
   printerName   String?
   errorMessage  String?
   createdAt     DateTime  @default(now())
@@ -91,7 +93,7 @@ model Payment {
   printJobId        String   @unique
   amount            Float
   currency          String   @default("INR")
-  status            String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  status            String   @default("PENDING")
   razorpayOrderId   String   @unique
   razorpayPaymentId String?
   razorpaySignature String?
