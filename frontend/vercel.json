@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
+      "source": "/api/v1/:path*",
+      "destination": "https://saas-production-531c.up.railway.app/api/v1/:path*"
     },
     {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
