@@ -74,6 +74,11 @@ export default function CafeDashboard() {
     const localTenantJson = localStorage.getItem('demo_tenant');
     if (localTenantJson) {
       const tenant = JSON.parse(localTenantJson);
+      // Always override with live production URLs regardless of what's in localStorage
+      tenant.websiteUrl = `https://saas-nine-ochre.vercel.app/cafe/${tenant.slug || 'my-cafe'}`;
+      tenant.backendApiUrl = 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
+      // Save corrected data back to localStorage
+      localStorage.setItem('demo_tenant', JSON.stringify(tenant));
       setData({
         metrics: {
           todayPrintCount: 0,
