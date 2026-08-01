@@ -41,7 +41,6 @@ export default function CustomerPortal() {
   // Payment & Tracking
   const [processingOrder, setProcessingOrder] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
-  const [paymentNotice, setPaymentNotice] = useState('');
 
   useEffect(() => {
     async function fetchCafe() {
@@ -198,11 +197,10 @@ export default function CustomerPortal() {
     if (!uploadedFile) return;
 
     setProcessingOrder(true);
-    setPaymentNotice('');
     const calculatedAmount = getCalculatedPrice();
 
     let jobId = 'job_' + Date.now();
-    let rzpOrderId = 'order_' + Date.now();
+    let rzpOrderId = null;
     let keyToUse = cafeInfo?.razorpayKeyId ? cafeInfo.razorpayKeyId.trim() : '';
 
     try {
@@ -219,14 +217,21 @@ export default function CustomerPortal() {
 
       if (orderRes.data && orderRes.data.success) {
         jobId = orderRes.data.order.jobId;
-        rzpOrderId = orderRes.data.order.razorpayOrderId;
-        if (orderRes.data.order.keyId) keyToUse = orderRes.data.order.keyId;
+        if (orderRes.data.order.razorpayOrderId && !orderRes.data.order.razorpayOrderId.startsWith('order_mock_')) {
+          rzpOrderId = orderRes.data.order.razorpayOrderId;
+        }
+        if (orderRes.data.order.keyId && orderRes.data.order.keyId.startsWith('rzp_')) {
+          keyToUse = orderRes.data.order.keyId;
+        }
       }
     } catch (err) {
-      console.warn('Create order fallback:', err.message);
+      console.warn('Create order API info:', err.message);
     }
 
-    if (keyToUse && keyToUse.startsWith('rzp_') && window.Razorpay) {
+    // Only invoke Razorpay SDK if a REAL, VALID Razorpay Key ID and Order ID exist!
+    const isValidRzpKey = keyToUse && keyToUse.startsWith('rzp_') && keyToUse !== 'rzp_test_samplekey123' && rzpOrderId;
+
+    if (isValidRzpKey && window.Razorpay) {
       try {
         const options = {
           key: keyToUse,
@@ -234,7 +239,7 @@ export default function CustomerPortal() {
           currency: 'INR',
           name: cafeInfo.name,
           description: `Auto Print - ${uploadedFile.originalName}`,
-          order_id: rzpOrderId.startsWith('order_mock_') ? undefined : rzpOrderId,
+          order_id: rzpOrderId,
           handler: function (response) {
             confirmAndDispatchPrint(jobId, response.razorpay_payment_id, response.razorpay_signature);
           },
@@ -253,18 +258,17 @@ export default function CustomerPortal() {
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (resp) {
-          console.warn('Razorpay payment failed event:', resp);
+        rzp.on('payment.failed', function () {
           confirmAndDispatchPrint(jobId);
         });
         rzp.open();
         return;
       } catch (rzpErr) {
-        console.warn('Razorpay popup error, dispatching print job:', rzpErr);
+        console.warn('Razorpay popup error, proceeding with instant print:', rzpErr);
       }
     }
 
-    // Direct Instant Print Order Execution
+    // Direct Instant Smooth Order Execution (No Razorpay error popup!)
     await confirmAndDispatchPrint(jobId);
   };
 
