@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const LIVE_RAILWAY_BACKEND_API = 'https://saas-production-531c.up.railway.app/api/v1';
+const LIVE_RAILWAY_BACKEND_API = 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || LIVE_RAILWAY_BACKEND_API;
 
