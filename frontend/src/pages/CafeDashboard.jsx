@@ -51,6 +51,12 @@ export default function CafeDashboard() {
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
         setRzpKeyId(res.data.cafe.razorpayKeyId || '');
 
+        const localTenantJson = localStorage.getItem('demo_tenant');
+        if (localTenantJson) {
+          const tenant = JSON.parse(localTenantJson);
+          if (tenant.razorpayKeySecret) setRzpKeySecret(tenant.razorpayKeySecret);
+        }
+
         const jobsRes = await api.get('/cafe/jobs?limit=10');
         if (jobsRes.data && jobsRes.data.success) {
           setJobs(jobsRes.data.jobs);
@@ -86,6 +92,7 @@ export default function CafeDashboard() {
       setBwPrice((tenant.bwPricePerPage || 2.0).toString());
       setColorPrice((tenant.colorPricePerPage || 10.0).toString());
       setRzpKeyId(tenant.razorpayKeyId || '');
+      setRzpKeySecret(tenant.razorpayKeySecret || '');
       setJobs([]);
     } else {
       const defaultTenant = {
@@ -100,6 +107,7 @@ export default function CafeDashboard() {
         bwPricePerPage: 2.0,
         colorPricePerPage: 10.0,
         razorpayKeyId: '',
+        razorpayKeySecret: '',
       };
       setData({
         metrics: { todayPrintCount: 0, todayRevenue: 0.0, activeQueueCount: 0, isAgentOnline: true },
@@ -161,12 +169,15 @@ export default function CafeDashboard() {
     setUpdatingRzp(true);
     setRzpSaveMsg('');
 
+    const trimmedKeyId = rzpKeyId.trim();
+    const trimmedKeySecret = rzpKeySecret.trim();
+
     if (data && data.cafe) {
       const updatedCafe = {
         ...data.cafe,
-        razorpayKeyId: rzpKeyId.trim(),
-        razorpayKeySecret: rzpKeySecret.trim(),
-        hasCustomRazorpay: !!(rzpKeyId.trim() && rzpKeySecret.trim()),
+        razorpayKeyId: trimmedKeyId,
+        razorpayKeySecret: trimmedKeySecret,
+        hasCustomRazorpay: !!(trimmedKeyId && trimmedKeySecret),
       };
       setData({
         ...data,
@@ -177,14 +188,14 @@ export default function CafeDashboard() {
 
     try {
       await api.put('/cafe/razorpay', {
-        razorpayKeyId: rzpKeyId.trim(),
-        razorpayKeySecret: rzpKeySecret.trim(),
+        razorpayKeyId: trimmedKeyId,
+        razorpayKeySecret: trimmedKeySecret,
       });
     } catch (err) {
-      console.warn('API sync warning, Razorpay saved locally:', err.message);
+      console.warn('API sync warning, Razorpay keys saved for session:', err.message);
     } finally {
       setUpdatingRzp(false);
-      setRzpSaveMsg('Razorpay Keys saved! Payments will go directly to your bank account.');
+      setRzpSaveMsg('Razorpay Key ID & Secret saved! Online payments connected.');
       setTimeout(() => setRzpSaveMsg(''), 4000);
     }
   };
@@ -206,7 +217,6 @@ export default function CafeDashboard() {
       // Direct executable download trigger
     }
 
-    // Direct GitHub release binary download link fallback
     const link = document.createElement('a');
     link.href = 'https://github.com/mdshami5036/saas/raw/main/print-agent/PrintAgent.exe';
     link.setAttribute('download', 'PrintAgent.exe');
@@ -371,26 +381,31 @@ export default function CafeDashboard() {
               </span>
             )}
           </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Enter your own Razorpay Key ID & Key Secret so payments go <strong>directly to your bank account</strong>.
+          </p>
 
           <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key ID (rzp_live_...)</label>
               <input
                 type="text"
+                required
                 placeholder="rzp_live_xxxxxxxx"
                 value={rzpKeyId}
                 onChange={(e) => setRzpKeyId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
               <input
                 type="password"
-                placeholder="••••••••••••••••"
+                required
+                placeholder="Enter Key Secret"
                 value={rzpKeySecret}
                 onChange={(e) => setRzpKeySecret(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
               />
             </div>
             <button
