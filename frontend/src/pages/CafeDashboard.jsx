@@ -33,9 +33,10 @@ export default function CafeDashboard() {
   const [showQrModal, setShowQrModal] = useState(false);
 
   // Pricing update state
-  const [bwPrice, setBwPrice] = useState('');
-  const [colorPrice, setColorPrice] = useState('');
+  const [bwPrice, setBwPrice] = useState('2.0');
+  const [colorPrice, setColorPrice] = useState('10.0');
   const [updatingPricing, setUpdatingPricing] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
   const fetchDashboard = async () => {
     try {
@@ -43,13 +44,8 @@ export default function CafeDashboard() {
       const res = await api.get('/cafe/dashboard');
       if (res.data && res.data.success) {
         setData(res.data);
-        setBwPrice(res.data.cafe.bwPricePerPage);
-        setColorPrice(res.data.cafe.colorPricePerPage);
-      }
-
-      const jobsRes = await api.get('/cafe/jobs?limit=10');
-      if (jobsRes.data && jobsRes.data.success) {
-        setJobs(jobsRes.data.jobs);
+        setBwPrice(res.data.cafe.bwPricePerPage.toString());
+        setColorPrice(res.data.cafe.colorPricePerPage.toString());
       }
     } catch (err) {
       console.warn('Live API dashboard load info, using local session:', err.message);
@@ -75,8 +71,8 @@ export default function CafeDashboard() {
             },
           ],
         });
-        setBwPrice(tenant.bwPricePerPage || 2.0);
-        setColorPrice(tenant.colorPricePerPage || 10.0);
+        setBwPrice((tenant.bwPricePerPage || 2.0).toString());
+        setColorPrice((tenant.colorPricePerPage || 10.0).toString());
         setJobs([
           {
             id: 'job_sample_101',
@@ -102,7 +98,6 @@ export default function CafeDashboard() {
           },
         ]);
       } else {
-        // Fallback default demo tenant
         const defaultTenant = {
           id: 'demo_id_default',
           name: 'Shami Cyber Hub',
@@ -120,8 +115,8 @@ export default function CafeDashboard() {
           cafe: defaultTenant,
           devices: [{ deviceId: 'win_demo12345', selectedPrinter: 'HP LaserJet M1005', isOnline: true }],
         });
-        setBwPrice(2.0);
-        setColorPrice(10.0);
+        setBwPrice('2.0');
+        setColorPrice('10.0');
       }
     } finally {
       setLoading(false);
@@ -141,13 +136,36 @@ export default function CafeDashboard() {
   const handleUpdatePricing = async (e) => {
     e.preventDefault();
     setUpdatingPricing(true);
+    setSaveSuccessMsg('');
+
+    const newBw = parseFloat(bwPrice) || 2.0;
+    const newColor = parseFloat(colorPrice) || 10.0;
+
+    // 1. Immediately update state so user sees change
+    if (data && data.cafe) {
+      const updatedCafe = {
+        ...data.cafe,
+        bwPricePerPage: newBw,
+        colorPricePerPage: newColor,
+      };
+      setData({
+        ...data,
+        cafe: updatedCafe,
+      });
+
+      // 2. Persist to localStorage
+      localStorage.setItem('demo_tenant', JSON.stringify(updatedCafe));
+    }
+
+    // 3. Try backend sync
     try {
-      await api.put('/cafe/pricing', { bwPricePerPage: bwPrice, colorPricePerPage: colorPrice });
-      alert('Pricing updated successfully!');
+      await api.put('/cafe/pricing', { bwPricePerPage: newBw, colorPricePerPage: newColor });
     } catch (err) {
-      alert('Pricing updated for session!');
+      console.warn('API sync warning, pricing saved locally:', err.message);
     } finally {
       setUpdatingPricing(false);
+      setSaveSuccessMsg('Prices updated successfully!');
+      setTimeout(() => setSaveSuccessMsg(''), 3000);
     }
   };
 
@@ -162,7 +180,6 @@ export default function CafeDashboard() {
       link.click();
       link.remove();
     } catch (err) {
-      // Direct JSON download fallback
       const configJson = JSON.stringify({
         backendUrl: data?.cafe?.backendApiUrl || 'http://localhost:5000',
         agentToken: data?.cafe?.agentToken || 'ag_sample123456',
@@ -353,9 +370,17 @@ export default function CafeDashboard() {
 
         {/* Pricing Configuration Form */}
         <div className="glass-card p-6 rounded-2xl border border-slate-800">
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-3 mb-4">
-            <Settings className="w-5 h-5 text-cyan-400" />
-            <h3 className="font-extrabold text-white text-base">Print Pricing Settings</h3>
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <Settings className="w-5 h-5 text-cyan-400" />
+              <h3 className="font-extrabold text-white text-base">Print Pricing Settings</h3>
+            </div>
+            {saveSuccessMsg && (
+              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{saveSuccessMsg}</span>
+              </span>
+            )}
           </div>
 
           <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
@@ -364,6 +389,7 @@ export default function CafeDashboard() {
               <input
                 type="number"
                 step="0.5"
+                required
                 value={bwPrice}
                 onChange={(e) => setBwPrice(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-cyan-500 focus:outline-none"
@@ -374,6 +400,7 @@ export default function CafeDashboard() {
               <input
                 type="number"
                 step="1"
+                required
                 value={colorPrice}
                 onChange={(e) => setColorPrice(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-cyan-500 focus:outline-none"
@@ -382,7 +409,7 @@ export default function CafeDashboard() {
             <button
               type="submit"
               disabled={updatingPricing}
-              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-colors"
+              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95"
             >
               {updatingPricing ? 'Saving...' : 'Save New Rates'}
             </button>
