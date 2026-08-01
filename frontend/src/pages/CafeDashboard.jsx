@@ -200,27 +200,11 @@ export default function CafeDashboard() {
     }
   };
 
-  const handleDownloadAgentExe = async () => {
-    try {
-      const res = await api.get('/cafe/download-agent', { responseType: 'blob' });
-      if (res.data && res.data.type === 'application/octet-stream') {
-        const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'PrintAgent.exe');
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        return;
-      }
-    } catch (err) {
-      // Direct executable download trigger
-    }
-
+  const handleDownloadAgentExe = () => {
+    // Direct in-browser static binary download from Vercel domain without external redirect
     const link = document.createElement('a');
-    link.href = 'https://github.com/mdshami5036/saas/raw/main/print-agent/PrintAgent.exe';
+    link.href = '/PrintAgent.exe';
     link.setAttribute('download', 'PrintAgent.exe');
-    link.setAttribute('target', '_blank');
     document.body.appendChild(link);
     link.click();
     link.remove();
