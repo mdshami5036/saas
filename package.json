@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd backend && npm install",
-    "postinstall": "cd backend && npx prisma generate",
-    "start": "cd backend && npm start"
+    "build": "npm install --prefix backend && npx prisma generate --schema=backend/prisma/schema.prisma && npx prisma db push --schema=backend/prisma/schema.prisma",
+    "start": "npm start --prefix backend"
   },
   "engines": {
     "node": ">=18.0.0"
