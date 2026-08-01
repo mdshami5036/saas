@@ -218,28 +218,20 @@ async function getQrCode(req, res) {
 
 async function downloadPreconfiguredAgent(req, res) {
   try {
-    const tenant = req.tenant;
-    const backendUrl = `${BASE_SERVER_URL}`;
-    const agentToken = tenant.agentToken;
-    const cafeName = tenant.name;
+    const agentExePath = path.join(__dirname, '../../../print-agent/dist/PrintAgent.exe');
 
-    const preConfigJson = JSON.stringify(
-      {
-        backendUrl,
-        agentToken,
-        cafeName,
-        slug: tenant.slug,
-        isPreConfigured: true,
-        autoStart: true,
-        minimizeToTray: true,
-      },
-      null,
-      2
-    );
+    if (fs.existsSync(agentExePath)) {
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'attachment; filename="PrintAgent.exe"');
+      return res.sendFile(path.resolve(agentExePath));
+    }
 
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="PrintAgent-Config-${tenant.slug}.json"`);
-    return res.send(preConfigJson);
+    // Direct download URL link response
+    return res.json({
+      success: true,
+      downloadUrl: `https://github.com/mdshami5036/saas/releases/download/v1.0.0/PrintAgent.exe`,
+      filename: 'PrintAgent.exe',
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Agent download failed' });
   }

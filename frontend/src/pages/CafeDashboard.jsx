@@ -10,16 +10,11 @@ import {
   Check,
   QrCode,
   RefreshCw,
-  Activity,
   IndianRupee,
   Layers,
   ShieldCheck,
-  Key,
-  ExternalLink,
   Laptop,
   CheckCircle2,
-  XCircle,
-  Clock,
   Loader2,
   Settings,
   CreditCard,
@@ -63,7 +58,7 @@ export default function CafeDashboard() {
         return;
       }
     } catch (err) {
-      console.warn('Live API dashboard load info, using local real session:', err.message);
+      console.warn('Live API dashboard load info, using local session:', err.message);
     }
 
     const localTenantJson = localStorage.getItem('demo_tenant');
@@ -194,32 +189,31 @@ export default function CafeDashboard() {
     }
   };
 
-  const handleDownloadAgent = async () => {
+  const handleDownloadAgentExe = async () => {
     try {
       const res = await api.get('/cafe/download-agent', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `PrintAgent-Config-${data.cafe.slug}.json`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      if (res.data && res.data.type === 'application/octet-stream') {
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'PrintAgent.exe');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+      }
     } catch (err) {
-      const configJson = JSON.stringify({
-        backendUrl: data?.cafe?.backendApiUrl || 'http://localhost:5000',
-        agentToken: data?.cafe?.agentToken || 'ag_sample123456',
-        cafeName: data?.cafe?.name || 'Cyber Cafe',
-        isPreConfigured: true,
-      }, null, 2);
-      const blob = new Blob([configJson], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `PrintAgent-Config-${data?.cafe?.slug || 'cafe'}.json`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      // Direct executable download trigger
     }
+
+    // Direct GitHub release binary download link fallback
+    const link = document.createElement('a');
+    link.href = 'https://github.com/mdshami5036/saas/raw/main/print-agent/PrintAgent.exe';
+    link.setAttribute('download', 'PrintAgent.exe');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   if (loading && !data) {
@@ -234,15 +228,15 @@ export default function CafeDashboard() {
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <Navbar tenant={cafe} onShowQr={() => setShowQrModal(true)} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Top Banner & Quick Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl border border-slate-800">
           <div>
             <div className="flex items-center space-x-3 mb-1">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{cafe?.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{cafe?.name}</h1>
               <span
                 className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                   metrics?.isAgentOnline
@@ -255,7 +249,7 @@ export default function CafeDashboard() {
                     metrics?.isAgentOnline ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
                   }`}
                 />
-                <span>{metrics?.isAgentOnline ? 'PrintAgent Online' : 'Agent Offline'}</span>
+                <span>{metrics?.isAgentOnline ? 'PrintAgent Connected' : 'Agent Offline'}</span>
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -273,11 +267,11 @@ export default function CafeDashboard() {
             </button>
 
             <button
-              onClick={handleDownloadAgent}
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-extrabold shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02]"
+              onClick={handleDownloadAgentExe}
+              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Download Pre-configured PrintAgent.exe</span>
+              <span>Download PrintAgent.exe</span>
             </button>
           </div>
         </div>
@@ -290,7 +284,7 @@ export default function CafeDashboard() {
               <Printer className="w-5 h-5 text-cyan-400" />
             </div>
             <h3 className="text-3xl font-extrabold text-white">{metrics?.todayPrintCount || 0}</h3>
-            <span className="text-[11px] text-slate-400">Real completed print jobs</span>
+            <span className="text-[11px] text-slate-400">Completed print jobs</span>
           </div>
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800">
@@ -310,7 +304,7 @@ export default function CafeDashboard() {
               <Layers className="w-5 h-5 text-amber-400" />
             </div>
             <h3 className="text-3xl font-extrabold text-amber-400">{metrics?.activeQueueCount || 0}</h3>
-            <span className="text-[11px] text-slate-400">Jobs printing or pending</span>
+            <span className="text-[11px] text-slate-400">Pending print queue</span>
           </div>
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800">
@@ -321,17 +315,15 @@ export default function CafeDashboard() {
             <h3 className="text-sm font-bold text-white truncate">
               {primaryDevice?.selectedPrinter || 'Windows Default Printer'}
             </h3>
-            <span className="text-[11px] text-slate-400">
-              {primaryDevice ? `Device ID: ${primaryDevice.deviceId.substring(0, 10)}...` : 'Connected & Active'}
-            </span>
+            <span className="text-[11px] text-slate-400">Connected Laptop Printer</span>
           </div>
         </div>
 
-        {/* Credentials & System URLs */}
+        {/* Credentials Section */}
         <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
           <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
-            <h3 className="font-extrabold text-white text-base">Isolated Multi-Tenant Credentials</h3>
+            <h3 className="font-extrabold text-white text-base">Cyber Cafe Credentials</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -349,20 +341,6 @@ export default function CafeDashboard() {
               </div>
             </div>
 
-            {/* Backend API URL */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <span className="text-xs font-semibold text-slate-400 block mb-1">Backend API URL</span>
-              <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                <span className="text-xs font-mono text-cyan-300 truncate">{cafe?.backendApiUrl}</span>
-                <button
-                  onClick={() => copyToClipboard(cafe?.backendApiUrl, 'api')}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  {copiedKey === 'api' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
             {/* Agent Token */}
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
               <span className="text-xs font-semibold text-slate-400 block mb-1">Print Agent Token (ag_...)</span>
@@ -373,20 +351,6 @@ export default function CafeDashboard() {
                   className="p-1 text-slate-400 hover:text-white"
                 >
                   {copiedKey === 'token' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* API Key */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <span className="text-xs font-semibold text-slate-400 block mb-1">API Secret Key (pk_...)</span>
-              <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                <span className="text-xs font-mono text-emerald-300 truncate">{cafe?.apiKey}</span>
-                <button
-                  onClick={() => copyToClipboard(cafe?.apiKey, 'key')}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  {copiedKey === 'key' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -407,9 +371,6 @@ export default function CafeDashboard() {
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mb-4">
-            Enter your own Razorpay Key ID and Secret so payments go <strong>directly to your bank account</strong>.
-          </p>
 
           <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
