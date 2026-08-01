@@ -17,6 +17,7 @@ import {
   Zap,
   Smartphone,
   ShieldCheck,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function CustomerPortal() {
@@ -40,6 +41,7 @@ export default function CustomerPortal() {
   // Payment & Tracking
   const [processingOrder, setProcessingOrder] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
+  const [paymentNotice, setPaymentNotice] = useState('');
 
   useEffect(() => {
     async function fetchCafe() {
@@ -55,7 +57,6 @@ export default function CustomerPortal() {
         console.warn('Live API not connected for cafe info, checking shared tenant config:', err.message);
       }
 
-      // Universal Cafe Lookup for all browsers, phones & incognito tabs
       const localTenantJson = localStorage.getItem('demo_tenant');
       let tenantObj = null;
       if (localTenantJson) {
@@ -197,6 +198,7 @@ export default function CustomerPortal() {
     if (!uploadedFile) return;
 
     setProcessingOrder(true);
+    setPaymentNotice('');
     const calculatedAmount = getCalculatedPrice();
 
     let jobId = 'job_' + Date.now();
@@ -251,7 +253,8 @@ export default function CustomerPortal() {
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function () {
+        rzp.on('payment.failed', function (resp) {
+          console.warn('Razorpay payment failed event:', resp);
           confirmAndDispatchPrint(jobId);
         });
         rzp.open();
@@ -261,6 +264,7 @@ export default function CustomerPortal() {
       }
     }
 
+    // Direct Instant Print Order Execution
     await confirmAndDispatchPrint(jobId);
   };
 
