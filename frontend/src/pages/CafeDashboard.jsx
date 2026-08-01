@@ -46,6 +46,10 @@ export default function CafeDashboard() {
       setLoading(true);
       const res = await api.get('/cafe/dashboard');
       if (res.data && res.data.success) {
+        // Always inject live production URL for customer portal
+        const cafeData = res.data.cafe;
+        cafeData.websiteUrl = `https://saas-nine-ochre.vercel.app/cafe/${cafeData.slug}`;
+        cafeData.backendApiUrl = 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
         setData(res.data);
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
@@ -100,8 +104,8 @@ export default function CafeDashboard() {
         name: 'My Cyber Cafe',
         slug: 'my-cyber-cafe',
         email: 'cafe@example.com',
-        websiteUrl: `${window.location.origin}/cafe/my-cyber-cafe`,
-        backendApiUrl: 'http://localhost:5000/api/v1',
+        websiteUrl: `https://saas-nine-ochre.vercel.app/cafe/my-cyber-cafe`,
+        backendApiUrl: 'https://saas-backend-production-5c3e.up.railway.app/api/v1',
         apiKey: 'pk_' + Math.random().toString(36).substring(2, 18),
         agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
         bwPricePerPage: 2.0,
