@@ -69,6 +69,8 @@ export default function CafeLogin() {
       console.error('Google Sign In Error:', err);
       if (err.code === 'auth/unauthorized-domain') {
         setErrorMsg('Please add ' + window.location.hostname + ' to Firebase Authorized Domains in Firebase Console.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setErrorMsg('Browser blocked the Google popup window. Please click the pop-up icon in your address bar to "Always allow popups" for this site, or try again.');
       } else {
         setErrorMsg(err.response?.data?.error || err.message || 'Google Sign-In failed.');
       }
