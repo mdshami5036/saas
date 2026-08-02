@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
-import { auth, googleProvider, signInWithPopup, signInWithEmailAndPassword } from '../config/firebase';
+import { auth, googleProvider, signInWithPopup } from '../config/firebase';
 import { Printer, Lock, Mail, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 export default function CafeLogin() {
@@ -18,21 +18,11 @@ export default function CafeLogin() {
     setErrorMsg('');
 
     try {
-      let idToken = null;
-      try {
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        idToken = await userCred.user.getIdToken();
-      } catch (fbErr) {
-        console.warn('Firebase Email Sign In info:', fbErr.message);
-      }
-
-      // Try Firebase Token Sync or Standard Login API
-      let res;
-      if (idToken) {
-        res = await api.post('/auth/firebase-login', { idToken, email, name: email.split('@')[0] });
-      } else {
-        res = await api.post('/auth/login', { email, password });
-      }
+      // Direct Strict Backend Database Authentication with bcrypt check
+      const res = await api.post('/auth/login', {
+        email: email.trim(),
+        password,
+      });
 
       if (res.data && res.data.success && res.data.token) {
         localStorage.clear();
@@ -40,11 +30,13 @@ export default function CafeLogin() {
         navigate('/dashboard');
         return;
       } else {
-        setErrorMsg(res.data?.error || 'Login failed.');
+        setErrorMsg(res.data?.error || 'Invalid email or password.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMsg(err.response?.data?.error || 'Invalid email or password. Please check your credentials.');
+      setErrorMsg(
+        err.response?.data?.error || 'Invalid email or password. Please check your credentials.'
+      );
     } finally {
       setLoading(false);
     }
@@ -96,7 +88,7 @@ export default function CafeLogin() {
               <Printer className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-extrabold text-white">Cyber Cafe Login</h2>
-            <p className="text-xs text-slate-400 mt-1">Firebase Auth Enabled • Google Sign-In</p>
+            <p className="text-xs text-slate-400 mt-1">Firebase Google Auth & Email Login</p>
           </div>
 
           {errorMsg && (
