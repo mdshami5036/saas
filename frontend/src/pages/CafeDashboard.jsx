@@ -83,11 +83,17 @@ export default function CafeDashboard() {
   const [rzpSaveMsg, setRzpSaveMsg] = useState('');
 
   const fetchDashboard = async () => {
+    const token = localStorage.getItem('tenant_token');
+    if (!token) {
+      localStorage.clear();
+      navigate('/login');
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await api.get('/cafe/dashboard');
       if (res.data && res.data.success) {
-        // Inject dynamic URL for customer portal and backend API
         const cafeData = res.data.cafe;
         cafeData.websiteUrl = `${getOriginUrl()}/cafe/${cafeData.slug}`;
         cafeData.backendApiUrl = getApiUrl();
@@ -95,12 +101,6 @@ export default function CafeDashboard() {
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
         setRzpKeyId(res.data.cafe.razorpayKeyId || '');
-
-        const localTenantJson = localStorage.getItem('demo_tenant');
-        if (localTenantJson) {
-          const tenant = JSON.parse(localTenantJson);
-          if (tenant.razorpayKeySecret) setRzpKeySecret(tenant.razorpayKeySecret);
-        }
 
         const jobsRes = await api.get('/cafe/jobs?limit=10');
         if (jobsRes.data && jobsRes.data.success) {
@@ -110,64 +110,11 @@ export default function CafeDashboard() {
         return;
       }
     } catch (err) {
-      console.warn('Live API dashboard load info, using local session:', err.message);
+      console.error('Failed to load authenticated cafe dashboard:', err.message);
+      localStorage.clear();
+      navigate('/login');
+      return;
     }
-
-    const localTenantJson = localStorage.getItem('demo_tenant');
-    if (localTenantJson) {
-      const tenant = JSON.parse(localTenantJson);
-      tenant.websiteUrl = `${getOriginUrl()}/cafe/${tenant.slug || 'my-cafe'}`;
-      tenant.backendApiUrl = getApiUrl();
-      localStorage.setItem('demo_tenant', JSON.stringify(tenant));
-      setData({
-        metrics: {
-          todayPrintCount: 0,
-          todayRevenue: 0.0,
-          activeQueueCount: 0,
-          isAgentOnline: true,
-        },
-        cafe: tenant,
-        devices: [
-          {
-            id: 'dev_real_1',
-            deviceId: 'win_counter_laptop',
-            deviceName: 'Windows Counter Laptop',
-            selectedPrinter: 'Windows Default Printer',
-            isOnline: true,
-            lastSeenAt: new Date().toISOString(),
-          },
-        ],
-      });
-      setBwPrice((tenant.bwPricePerPage || 2.0).toString());
-      setColorPrice((tenant.colorPricePerPage || 10.0).toString());
-      setRzpKeyId(tenant.razorpayKeyId || '');
-      setRzpKeySecret(tenant.razorpayKeySecret || '');
-      setJobs([]);
-    } else {
-      const defaultTenant = {
-        id: 'real_id_cafe',
-        name: 'My Cyber Cafe',
-        slug: 'my-cyber-cafe',
-        email: 'cafe@example.com',
-        websiteUrl: `${getOriginUrl()}/cafe/my-cyber-cafe`,
-        backendApiUrl: getApiUrl(),
-        apiKey: 'pk_' + Math.random().toString(36).substring(2, 18),
-        agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
-        bwPricePerPage: 2.0,
-        colorPricePerPage: 10.0,
-        razorpayKeyId: '',
-        razorpayKeySecret: '',
-      };
-      setData({
-        metrics: { todayPrintCount: 0, todayRevenue: 0.0, activeQueueCount: 0, isAgentOnline: true },
-        cafe: defaultTenant,
-        devices: [{ deviceId: 'win_counter_laptop', selectedPrinter: 'Windows Default Printer', isOnline: true }],
-      });
-      setBwPrice('2.0');
-      setColorPrice('10.0');
-      setJobs([]);
-    }
-    setLoading(false);
   };
 
 
