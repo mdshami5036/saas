@@ -12,27 +12,6 @@ export default function CafeLogin() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const createLocalDemoSession = (userEmail) => {
-    const slug = userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-') + '-cafe';
-    const token = 'demo_token_' + Date.now();
-    const mockTenant = {
-      id: 'demo_id_' + Date.now(),
-      name: userEmail.split('@')[0].toUpperCase() + ' Cyber Hub',
-      email: userEmail,
-      slug,
-      websiteUrl: `${window.location.origin}/cafe/${slug}`,
-      backendApiUrl: 'http://localhost:5000/api/v1',
-      apiKey: 'pk_' + Math.random().toString(36).substring(2, 18),
-      agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
-      bwPricePerPage: 2.0,
-      colorPricePerPage: 10.0,
-      status: 'ACTIVE',
-    };
-    localStorage.setItem('tenant_token', token);
-    localStorage.setItem('demo_tenant', JSON.stringify(mockTenant));
-    return token;
-  };
-
   const handleStandardLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,29 +23,28 @@ export default function CafeLogin() {
         const userCred = await signInWithEmailAndPassword(auth, email, password);
         idToken = await userCred.user.getIdToken();
       } catch (fbErr) {
-        console.warn('Firebase Email Sign In fallback:', fbErr.message);
+        console.warn('Firebase Email Sign In info:', fbErr.message);
       }
 
-      try {
-        const res = await api.post('/auth/firebase-login', {
-          idToken,
-          email,
-          name: email.split('@')[0],
-        });
+      // Try Firebase Token Sync or Standard Login API
+      let res;
+      if (idToken) {
+        res = await api.post('/auth/firebase-login', { idToken, email, name: email.split('@')[0] });
+      } else {
+        res = await api.post('/auth/login', { email, password });
+      }
 
-        if (res.data && res.data.success) {
-          localStorage.setItem('tenant_token', res.data.token);
-          navigate('/dashboard');
-          return;
-        }
-      } catch (apiErr) {
-        console.warn('Live API not connected, opening dashboard session:', apiErr.message);
-        createLocalDemoSession(email);
+      if (res.data && res.data.success && res.data.token) {
+        localStorage.clear();
+        localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
         return;
+      } else {
+        setErrorMsg(res.data?.error || 'Login failed.');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Login failed. Please check credentials.');
+      console.error('Login error:', err);
+      setErrorMsg(err.response?.data?.error || 'Invalid email or password. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -81,31 +59,26 @@ export default function CafeLogin() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      try {
-        const res = await api.post('/auth/firebase-login', {
-          idToken,
-          email: user.email,
-          name: user.displayName || user.email.split('@')[0],
-        });
+      const res = await api.post('/auth/firebase-login', {
+        idToken,
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+      });
 
-        if (res.data && res.data.success) {
-          localStorage.setItem('tenant_token', res.data.token);
-          navigate('/dashboard');
-          return;
-        }
-      } catch (apiErr) {
-        console.warn('Live API not connected, opening Google session:', apiErr.message);
-        createLocalDemoSession(user.email);
+      if (res.data && res.data.success && res.data.token) {
+        localStorage.clear();
+        localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
         return;
+      } else {
+        setErrorMsg(res.data?.error || 'Google Authentication failed on server.');
       }
     } catch (err) {
       console.error('Google Sign In Error:', err);
       if (err.code === 'auth/unauthorized-domain') {
         setErrorMsg('Please add ' + window.location.hostname + ' to Firebase Authorized Domains in Firebase Console.');
       } else {
-        createLocalDemoSession(email || 'shami@example.com');
-        navigate('/dashboard');
+        setErrorMsg(err.response?.data?.error || err.message || 'Google Sign-In failed.');
       }
     } finally {
       setLoading(false);
@@ -188,7 +161,7 @@ export default function CafeLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.01] flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.01] flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

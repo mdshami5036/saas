@@ -17,27 +17,6 @@ export default function CafeRegister() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const createLocalDemoSession = (cafeName, cafeEmail) => {
-    const slug = cafeName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000);
-    const token = 'demo_token_' + Date.now();
-    const mockTenant = {
-      id: 'demo_id_' + Date.now(),
-      name: cafeName,
-      email: cafeEmail,
-      slug,
-      websiteUrl: `${window.location.origin}/cafe/${slug}`,
-      backendApiUrl: 'http://localhost:5000/api/v1',
-      apiKey: 'pk_' + Math.random().toString(36).substring(2, 18),
-      agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
-      bwPricePerPage: parseFloat(bwPricePerPage || 2.0),
-      colorPricePerPage: parseFloat(colorPricePerPage || 10.0),
-      status: 'ACTIVE',
-    };
-    localStorage.setItem('tenant_token', token);
-    localStorage.setItem('demo_tenant', JSON.stringify(mockTenant));
-    return token;
-  };
-
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -50,31 +29,26 @@ export default function CafeRegister() {
         console.warn('Firebase user creation info:', fbErr.message);
       }
 
-      // Try live API backend first
-      let res;
-      try {
-        res = await api.post('/auth/register', {
-          name,
-          email,
-          password,
-          phone,
-          bwPricePerPage,
-          colorPricePerPage,
-        });
+      const res = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        phone,
+        bwPricePerPage,
+        colorPricePerPage,
+      });
 
-        if (res.data && res.data.success) {
-          localStorage.setItem('tenant_token', res.data.token);
-          navigate('/dashboard');
-          return;
-        }
-      } catch (apiErr) {
-        console.warn('Live API server not connected, using instant cloud session:', apiErr.message);
-        createLocalDemoSession(name, email);
+      if (res.data && res.data.success && res.data.token) {
+        localStorage.clear();
+        localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
         return;
+      } else {
+        setErrorMsg(res.data?.error || 'Registration failed.');
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Registration failed. Please try again.');
+      console.error('Register error:', err);
+      setErrorMsg(err.response?.data?.error || 'Registration failed. Please check details or try a different email.');
     } finally {
       setLoading(false);
     }
@@ -89,31 +63,26 @@ export default function CafeRegister() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      try {
-        const res = await api.post('/auth/firebase-login', {
-          idToken,
-          email: user.email,
-          name: user.displayName || user.email.split('@')[0],
-        });
+      const res = await api.post('/auth/firebase-login', {
+        idToken,
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+      });
 
-        if (res.data && res.data.success) {
-          localStorage.setItem('tenant_token', res.data.token);
-          navigate('/dashboard');
-          return;
-        }
-      } catch (apiErr) {
-        console.warn('Live API server not connected, using instant Google session:', apiErr.message);
-        createLocalDemoSession(user.displayName || 'Cyber Cafe', user.email);
+      if (res.data && res.data.success && res.data.token) {
+        localStorage.clear();
+        localStorage.setItem('tenant_token', res.data.token);
         navigate('/dashboard');
         return;
+      } else {
+        setErrorMsg(res.data?.error || 'Google Sign-up failed on server.');
       }
     } catch (err) {
       console.error('Google Register Error:', err);
-      // Fallback if domain error or popup closed
       if (err.code === 'auth/unauthorized-domain') {
         setErrorMsg('Please add ' + window.location.hostname + ' to Firebase Authorized Domains in Firebase Console.');
       } else {
-        setErrorMsg('Google Sign-up failed: ' + err.message);
+        setErrorMsg(err.response?.data?.error || err.message || 'Google Sign-up failed.');
       }
     } finally {
       setLoading(false);
@@ -131,7 +100,7 @@ export default function CafeRegister() {
               <Store className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-extrabold text-white">Register Cyber Cafe</h2>
-            <p className="text-xs text-slate-400 mt-1">Instant Registration & Dashboard Access</p>
+            <p className="text-xs text-slate-400 mt-1">Firebase Auth Enabled • Instant Registration</p>
           </div>
 
           {errorMsg && (
@@ -252,13 +221,13 @@ export default function CafeRegister() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.01] flex items-center justify-center space-x-2 mt-4"
+              className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.01] flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <span>Create Cafe Account</span>
+                  <span>Complete Cyber Cafe Registration</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -266,9 +235,9 @@ export default function CafeRegister() {
           </form>
 
           <div className="mt-6 text-center text-xs text-slate-400">
-            Already registered?{' '}
+            Already have an account?{' '}
             <Link to="/login" className="text-cyan-400 hover:underline font-semibold">
-              Log in to account
+              Sign In
             </Link>
           </div>
         </div>
