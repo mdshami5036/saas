@@ -23,6 +23,47 @@ import {
 
 export default function CafeDashboard() {
   const navigate = useNavigate();
+
+  // Dynamic Environment URL Detector
+  const getOriginUrl = () => {
+    if (typeof window !== 'undefined' && window.location.origin) {
+      return window.location.origin;
+    }
+    return 'https://saas-nine-ochre.vercel.app';
+  };
+
+  const getApiUrl = () => {
+    if (import.meta.env.VITE_API_BASE_URL) {
+      return import.meta.env.VITE_API_BASE_URL;
+    }
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return 'http://localhost:5000/api/v1';
+    }
+    return 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
+  };
+
+  // Auto-fix: Ensure any legacy URLs in localStorage are updated
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('demo_tenant');
+      if (stored) {
+        const tenant = JSON.parse(stored);
+        let changed = false;
+        if (tenant.websiteUrl && (tenant.websiteUrl.includes('localhost') || tenant.websiteUrl.includes('127.0.0.1'))) {
+          tenant.websiteUrl = `${getOriginUrl()}/cafe/${tenant.slug || 'my-cafe'}`;
+          changed = true;
+        }
+        if (tenant.backendApiUrl && (tenant.backendApiUrl.includes('localhost') || tenant.backendApiUrl.includes('127.0.0.1'))) {
+          tenant.backendApiUrl = getApiUrl();
+          changed = true;
+        }
+        if (changed) {
+          localStorage.setItem('demo_tenant', JSON.stringify(tenant));
+        }
+      }
+    } catch (e) {}
+  }, []);
+
   const [data, setData] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,10 +87,10 @@ export default function CafeDashboard() {
       setLoading(true);
       const res = await api.get('/cafe/dashboard');
       if (res.data && res.data.success) {
-        // Always inject live production URL for customer portal
+        // Inject dynamic URL for customer portal and backend API
         const cafeData = res.data.cafe;
-        cafeData.websiteUrl = `https://saas-nine-ochre.vercel.app/cafe/${cafeData.slug}`;
-        cafeData.backendApiUrl = 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
+        cafeData.websiteUrl = `${getOriginUrl()}/cafe/${cafeData.slug}`;
+        cafeData.backendApiUrl = getApiUrl();
         setData(res.data);
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
@@ -65,6 +106,7 @@ export default function CafeDashboard() {
         if (jobsRes.data && jobsRes.data.success) {
           setJobs(jobsRes.data.jobs);
         }
+        setLoading(false);
         return;
       }
     } catch (err) {
@@ -74,10 +116,8 @@ export default function CafeDashboard() {
     const localTenantJson = localStorage.getItem('demo_tenant');
     if (localTenantJson) {
       const tenant = JSON.parse(localTenantJson);
-      // Always override with live production URLs regardless of what's in localStorage
-      tenant.websiteUrl = `https://saas-nine-ochre.vercel.app/cafe/${tenant.slug || 'my-cafe'}`;
-      tenant.backendApiUrl = 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
-      // Save corrected data back to localStorage
+      tenant.websiteUrl = `${getOriginUrl()}/cafe/${tenant.slug || 'my-cafe'}`;
+      tenant.backendApiUrl = getApiUrl();
       localStorage.setItem('demo_tenant', JSON.stringify(tenant));
       setData({
         metrics: {
@@ -109,8 +149,8 @@ export default function CafeDashboard() {
         name: 'My Cyber Cafe',
         slug: 'my-cyber-cafe',
         email: 'cafe@example.com',
-        websiteUrl: `https://saas-nine-ochre.vercel.app/cafe/my-cyber-cafe`,
-        backendApiUrl: 'https://saas-backend-production-5c3e.up.railway.app/api/v1',
+        websiteUrl: `${getOriginUrl()}/cafe/my-cyber-cafe`,
+        backendApiUrl: getApiUrl(),
         apiKey: 'pk_' + Math.random().toString(36).substring(2, 18),
         agentToken: 'ag_' + Math.random().toString(36).substring(2, 18),
         bwPricePerPage: 2.0,
@@ -129,6 +169,7 @@ export default function CafeDashboard() {
     }
     setLoading(false);
   };
+
 
   useEffect(() => {
     fetchDashboard();

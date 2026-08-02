@@ -7,22 +7,18 @@ import PrintStatusTracker from '../components/PrintStatusTracker';
 import {
   UploadCloud,
   FileText,
-  CheckCircle2,
   Printer,
-  Sparkles,
   Loader2,
-  Check,
   Plus,
   Minus,
   Zap,
-  Smartphone,
-  ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
 
 export default function CustomerPortal() {
   const { slug } = useParams();
   const [cafeInfo, setCafeInfo] = useState(null);
+  const [cafeError, setCafeError] = useState('');
   const [loadingInfo, setLoadingInfo] = useState(true);
 
   // File state
@@ -41,11 +37,13 @@ export default function CustomerPortal() {
   // Payment & Tracking
   const [processingOrder, setProcessingOrder] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
+  const [paymentErrorMessage, setPaymentErrorMessage] = useState('');
 
   useEffect(() => {
     async function fetchCafe() {
       try {
         setLoadingInfo(true);
+        setCafeError('');
         const res = await api.get(`/public/cafe/${slug}/info`);
         if (res.data && res.data.success && res.data.cafe) {
           setCafeInfo(res.data.cafe);
@@ -53,31 +51,11 @@ export default function CustomerPortal() {
           return;
         }
       } catch (err) {
-        console.warn('Live API not connected for cafe info, checking shared tenant config:', err.message);
+        console.error('Failed to load Cyber Cafe info:', err.message);
+        setCafeError(
+          err.response?.data?.error || 'Cyber Cafe not found. Please check the URL link or contact the owner.'
+        );
       }
-
-      const localTenantJson = localStorage.getItem('demo_tenant');
-      let tenantObj = null;
-      if (localTenantJson) {
-        try {
-          tenantObj = JSON.parse(localTenantJson);
-        } catch (e) {}
-      }
-
-      const cleanName = slug
-        .replace(/-cafe$/i, '')
-        .split('-')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-
-      setCafeInfo({
-        id: tenantObj?.id || 'cafe_' + slug,
-        name: tenantObj?.name || (cleanName ? `${cleanName} Cyber Center` : 'AutoPrint Cyber Cafe'),
-        slug: slug,
-        bwPricePerPage: tenantObj?.bwPricePerPage || 2.0,
-        colorPricePerPage: tenantObj?.colorPricePerPage || 10.0,
-        razorpayKeyId: tenantObj?.razorpayKeyId || '',
-      });
       setLoadingInfo(false);
     }
 
@@ -114,6 +92,7 @@ export default function CustomerPortal() {
     setSelectedFile(file);
     setUploading(true);
     setUploadProgress(20);
+    setPaymentErrorMessage('');
 
     const pageCount = await fastDetectPdfPageCount(file);
     setUploadProgress(60);
@@ -148,7 +127,7 @@ export default function CustomerPortal() {
     setTimeout(() => setUploading(false), 200);
   };
 
-  // Price Calculation Logic
+  // Strict Per-Cafe Price Calculation Logic
   const getCalculatedPrice = () => {
     if (!cafeInfo || !uploadedFile) return 0;
     const totalPages = uploadedFile.totalPages || 1;
@@ -178,21 +157,6 @@ export default function CustomerPortal() {
     return selectedPagesCount * copies * pricePerPage;
   };
 
-  const confirmAndDispatchPrint = async (jobId, rzpPaymentId = null, rzpSignature = null) => {
-    try {
-      await api.post('/public/verify-payment', {
-        jobId,
-        razorpayPaymentId: rzpPaymentId || `pay_${Date.now()}`,
-        razorpaySignature: rzpSignature || 'signature_verified',
-      });
-    } catch (err) {
-      console.warn('Payment verify api sync info:', err.message);
-    } finally {
-      setActiveJobId(jobId);
-      setProcessingOrder(false);
-    }
-  };
-
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       if (window.Razorpay) { resolve(true); return; }
@@ -204,17 +168,38 @@ export default function CustomerPortal() {
     });
   };
 
+  const confirmAndDispatchPrint = async (jobId, rzpPaymentId, rzpOrderId, rzpSignature) => {
+    try {
+      const res = await api.post('/public/verify-payment', {
+        jobId,
+        razorpayOrderId: rzpOrderId,
+        razorpayPaymentId: rzpPaymentId,
+        razorpaySignature: rzpSignature,
+      });
+
+      if (res.data && res.data.success) {
+        setActiveJobId(jobId);
+        setPaymentErrorMessage('');
+      } else {
+        setPaymentErrorMessage(res.data?.error || 'Payment verification failed on server.');
+      }
+    } catch (err) {
+      console.error('Payment verify API error:', err);
+      setPaymentErrorMessage(err.response?.data?.error || 'Payment verification failed.');
+    } finally {
+      setProcessingOrder(false);
+    }
+  };
+
   const handleProceedToPayment = async () => {
     if (!uploadedFile) return;
 
     setProcessingOrder(true);
+    setPaymentErrorMessage('');
     const calculatedAmount = getCalculatedPrice();
 
-    let jobId = 'job_' + Date.now();
-    let rzpOrderId = null;
-    let keyToUse = cafeInfo?.razorpayKeyId ? cafeInfo.razorpayKeyId.trim() : '';
-
     try {
+      // 1. Create order on backend (creates PENDING job & Razorpay order for this cafe)
       const orderRes = await api.post(`/public/create-order?slug=${slug}`, {
         customerName: customerName || 'Guest Customer',
         customerPhone,
@@ -226,68 +211,95 @@ export default function CustomerPortal() {
         colorMode,
       });
 
-      if (orderRes.data && orderRes.data.success) {
-        jobId = orderRes.data.order.jobId;
-        if (orderRes.data.order.razorpayOrderId && !orderRes.data.order.razorpayOrderId.startsWith('order_mock_')) {
-          rzpOrderId = orderRes.data.order.razorpayOrderId;
-        }
-        if (orderRes.data.order.keyId && orderRes.data.order.keyId.startsWith('rzp_')) {
-          keyToUse = orderRes.data.order.keyId;
-        }
-      }
-    } catch (err) {
-      console.warn('Create order API info:', err.message);
-    }
-
-    // Only invoke Razorpay SDK if a REAL, VALID Razorpay Key ID and Order ID exist!
-    const isValidRzpKey = keyToUse && keyToUse.startsWith('rzp_') && keyToUse !== 'rzp_test_samplekey123' && rzpOrderId;
-
-    if (isValidRzpKey) {
-      const loaded = await loadRazorpayScript();
-      if (loaded && window.Razorpay) {
-        const options = {
-          key: keyToUse,
-          amount: Math.round(calculatedAmount * 100),
-          currency: 'INR',
-          name: cafeInfo.name,
-          description: `Auto Print - ${uploadedFile.originalName}`,
-          order_id: rzpOrderId,
-          handler: function (response) {
-            confirmAndDispatchPrint(jobId, response.razorpay_payment_id, response.razorpay_signature);
-          },
-          modal: {
-            ondismiss: function () {
-              setProcessingOrder(false);
-            },
-          },
-          prefill: {
-            name: customerName || 'Guest Customer',
-            contact: customerPhone || '9876543210',
-          },
-          theme: {
-            color: '#0284c7',
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function () {
-          confirmAndDispatchPrint(jobId);
-        });
-        rzp.open();
+      if (!orderRes.data || !orderRes.data.success) {
+        setPaymentErrorMessage(orderRes.data?.error || 'Failed to create payment order.');
+        setProcessingOrder(false);
         return;
-      } catch (rzpErr) {
-        console.warn('Razorpay popup error, proceeding with instant print:', rzpErr);
       }
-    }
 
-    // Direct Instant Smooth Order Execution (No Razorpay error popup!)
-    await confirmAndDispatchPrint(jobId);
+      const { jobId, razorpayOrderId, keyId, cafeName } = orderRes.data.order;
+
+      if (!keyId || !razorpayOrderId) {
+        setPaymentErrorMessage('This Cyber Cafe has not configured their Razorpay payment gateway yet.');
+        setProcessingOrder(false);
+        return;
+      }
+
+      // 2. Load Razorpay Checkout SDK
+      const loaded = await loadRazorpayScript();
+      if (!loaded || !window.Razorpay) {
+        setPaymentErrorMessage('Failed to load Razorpay payment gateway SDK.');
+        setProcessingOrder(false);
+        return;
+      }
+
+      // 3. Open Razorpay Payment Window (ONLY THIS CAFE'S REVENUE)
+      const options = {
+        key: keyId,
+        amount: Math.round(calculatedAmount * 100),
+        currency: 'INR',
+        name: cafeName || cafeInfo?.name || 'Cyber Cafe Auto-Print',
+        description: `Print Job - ${uploadedFile.originalName}`,
+        order_id: razorpayOrderId,
+        handler: function (response) {
+          // Strictly verify payment on backend after successful checkout
+          confirmAndDispatchPrint(
+            jobId,
+            response.razorpay_payment_id,
+            response.razorpay_order_id || razorpayOrderId,
+            response.razorpay_signature
+          );
+        },
+        modal: {
+          ondismiss: function () {
+            setProcessingOrder(false);
+          },
+        },
+        prefill: {
+          name: customerName || 'Guest Customer',
+          contact: customerPhone || '9876543210',
+        },
+        theme: {
+          color: '#0284c7',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (resp) {
+        console.error('Razorpay payment failed:', resp.error);
+        setPaymentErrorMessage(resp.error?.description || 'Payment was declined or failed.');
+        setProcessingOrder(false);
+      });
+      rzp.open();
+
+    } catch (err) {
+      console.error('Create order execution error:', err);
+      setPaymentErrorMessage(
+        err.response?.data?.error || 'Failed to initialize payment gateway. Please ensure the Cyber Cafe has configured Razorpay.'
+      );
+      setProcessingOrder(false);
+    }
   };
 
   if (loadingInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
         <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (cafeError || !cafeInfo) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mb-4 border border-rose-500/20">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Cyber Cafe Not Found</h2>
+          <p className="text-slate-400 text-sm max-w-md mb-6">{cafeError}</p>
+        </div>
       </div>
     );
   }
@@ -312,6 +324,17 @@ export default function CustomerPortal() {
             Fast PDF upload, customize pages, pay online & print instantly!
           </p>
         </div>
+
+        {/* Error Notification Banner */}
+        {paymentErrorMessage && (
+          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-start space-x-3 shadow-lg">
+            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block">Payment / Order Issue</span>
+              <span>{paymentErrorMessage}</span>
+            </div>
+          </div>
+        )}
 
         {/* Step 1: Upload PDF Box */}
         {!uploadedFile ? (
@@ -373,6 +396,7 @@ export default function CustomerPortal() {
                     onClick={() => {
                       setUploadedFile(null);
                       setSelectedFile(null);
+                      setPaymentErrorMessage('');
                     }}
                     className="text-xs text-rose-400 hover:underline font-bold shrink-0 ml-2"
                   >
@@ -480,7 +504,7 @@ export default function CustomerPortal() {
                   <button
                     disabled={processingOrder}
                     onClick={handleProceedToPayment}
-                    className="py-3 px-6 rounded-xl font-extrabold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-95 flex items-center space-x-2"
+                    className="py-3 px-6 rounded-xl font-extrabold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] active:scale-95 flex items-center space-x-2 disabled:opacity-50"
                   >
                     {processingOrder ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -508,7 +532,7 @@ export default function CustomerPortal() {
           <button
             disabled={processingOrder}
             onClick={handleProceedToPayment}
-            className="py-2.5 px-5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/30 transition-all flex items-center space-x-1.5 active:scale-95"
+            className="py-2.5 px-5 rounded-xl font-extrabold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/30 transition-all flex items-center space-x-1.5 active:scale-95 disabled:opacity-50"
           >
             {processingOrder ? (
               <Loader2 className="w-4 h-4 animate-spin" />

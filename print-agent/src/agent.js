@@ -15,11 +15,19 @@ let currentConfig = null;
 let hardwareInfo = null;
 
 async function processPrintJob(jobData) {
-  const { jobId, downloadUrl, pdfUrl, pagesToPrint, copies, colorMode, customerName } = jobData;
+  const { jobId, downloadUrl, pdfUrl, pagesToPrint, copies, colorMode, customerName, paymentStatus } = jobData;
+
+  // STRICT SECURITY CHECK: Never print unpaid jobs!
+  if (paymentStatus && paymentStatus !== 'SUCCESS' && paymentStatus !== 'COMPLETED') {
+    console.error(`[Security Violation] Aborting print for unpaid job #${jobId} (paymentStatus: ${paymentStatus}).`);
+    reportJobStatus(jobId, 'FAILED', 'Unpaid print job rejected by agent security');
+    showDesktopNotification('Print Rejected', 'Unpaid print job ignored by agent security');
+    return;
+  }
 
   console.log(`\n========================================================`);
-  console.log(`[Job Dispatch] Received Print Job #${jobId} for ${customerName}`);
-  console.log(`[Options] Pages: ${pagesToPrint}, Copies: ${copies}, Mode: ${colorMode}`);
+  console.log(`[Job Dispatch] Received Paid Print Job #${jobId} for ${customerName}`);
+  console.log(`[Options] Pages: ${pagesToPrint}, Copies: ${copies}, Mode: ${colorMode}, Payment: ${paymentStatus || 'SUCCESS'}`);
 
   showDesktopNotification('New Print Job Received!', `Printing ${customerName}'s PDF document...`);
 
