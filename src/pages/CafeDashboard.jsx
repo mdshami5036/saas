@@ -79,6 +79,7 @@ export default function CafeDashboard() {
   // Custom Razorpay credentials state
   const [rzpKeyId, setRzpKeyId] = useState('');
   const [rzpKeySecret, setRzpKeySecret] = useState('');
+  const [isEditingRzp, setIsEditingRzp] = useState(false);
   const [updatingRzp, setUpdatingRzp] = useState(false);
   const [rzpSaveMsg, setRzpSaveMsg] = useState('');
 
@@ -100,7 +101,9 @@ export default function CafeDashboard() {
         setData(res.data);
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
-        setRzpKeyId(res.data.cafe.razorpayKeyId || '');
+        if (!isEditingRzp) {
+          setRzpKeyId(res.data.cafe.razorpayKeyId || '');
+        }
 
         const jobsRes = await api.get('/cafe/jobs?limit=10');
         if (jobsRes.data && jobsRes.data.success) {
@@ -196,6 +199,7 @@ export default function CafeDashboard() {
       console.warn('API sync warning, Razorpay keys saved for session:', err.message);
     } finally {
       setUpdatingRzp(false);
+      setIsEditingRzp(false);
       setRzpSaveMsg('Razorpay Key ID & Secret saved! Online payments connected.');
       setTimeout(() => setRzpSaveMsg(''), 4000);
     }
@@ -378,7 +382,10 @@ export default function CafeDashboard() {
                 required
                 placeholder="rzp_live_xxxxxxxx"
                 value={rzpKeyId}
-                onChange={(e) => setRzpKeyId(e.target.value)}
+                onChange={(e) => {
+                  setIsEditingRzp(true);
+                  setRzpKeyId(e.target.value);
+                }}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
               />
             </div>
@@ -386,10 +393,12 @@ export default function CafeDashboard() {
               <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
               <input
                 type="password"
-                required
-                placeholder="Enter Key Secret"
+                placeholder="Enter Secret (leave empty if unchanged)"
                 value={rzpKeySecret}
-                onChange={(e) => setRzpKeySecret(e.target.value)}
+                onChange={(e) => {
+                  setIsEditingRzp(true);
+                  setRzpKeySecret(e.target.value);
+                }}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
               />
             </div>
