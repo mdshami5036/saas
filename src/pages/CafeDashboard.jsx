@@ -83,6 +83,9 @@ export default function CafeDashboard() {
   const [updatingRzp, setUpdatingRzp] = useState(false);
   const [rzpSaveMsg, setRzpSaveMsg] = useState('');
 
+  // Printer selection state — MUST be at top level, before any return
+  const [selectedPrinterState, setSelectedPrinterState] = useState('');
+
   const fetchDashboard = async () => {
     const token = localStorage.getItem('tenant_token');
     if (!token) {
@@ -120,7 +123,6 @@ export default function CafeDashboard() {
     }
   };
 
-
   useEffect(() => {
     fetchDashboard();
     const interval = setInterval(() => {
@@ -153,7 +155,6 @@ export default function CafeDashboard() {
         ...data,
         cafe: updatedCafe,
       });
-
       localStorage.setItem('demo_tenant', JSON.stringify(updatedCafe));
     }
 
@@ -206,7 +207,6 @@ export default function CafeDashboard() {
   };
 
   const handleDownloadAgentExe = () => {
-    // Download live verified binary directly from Railway backend server
     const backendDownloadUrl = 'https://saas-backend-production-5c3e.up.railway.app/downloads/PrintAgent.exe';
     const link = document.createElement('a');
     link.href = backendDownloadUrl;
@@ -217,18 +217,8 @@ export default function CafeDashboard() {
     link.remove();
   };
 
-  if (loading && !data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
-        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
-
   const { cafe, metrics, devices } = data || {};
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
-
-  const [selectedPrinterState, setSelectedPrinterState] = useState('');
 
   const availablePrinters = useMemo(() => {
     if (!primaryDevice || !primaryDevice.availablePrinters) return [];
@@ -249,6 +239,14 @@ export default function CafeDashboard() {
       console.warn('Printer update error:', err.message);
     }
   };
+
+  if (loading && !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
+        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
@@ -409,7 +407,7 @@ export default function CafeDashboard() {
             )}
           </div>
           <p className="text-xs text-slate-400 mb-4">
-            Enter your own Razorpay Key ID & Key Secret so payments go <strong>directly to your bank account</strong>.
+            Enter your own Razorpay Key ID &amp; Key Secret so payments go <strong>directly to your bank account</strong>.
           </p>
 
           <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
@@ -476,7 +474,7 @@ export default function CafeDashboard() {
 
           <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Black & White Rate (₹/page)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Black &amp; White Rate (₹/page)</label>
               <input
                 type="number"
                 step="0.5"
