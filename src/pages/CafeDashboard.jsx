@@ -228,6 +228,28 @@ export default function CafeDashboard() {
   const { cafe, metrics, devices } = data || {};
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
+  const [selectedPrinterState, setSelectedPrinterState] = useState('');
+
+  const availablePrinters = React.useMemo(() => {
+    if (!primaryDevice || !primaryDevice.availablePrinters) return [];
+    try {
+      if (Array.isArray(primaryDevice.availablePrinters)) return primaryDevice.availablePrinters;
+      return JSON.parse(primaryDevice.availablePrinters);
+    } catch (e) {
+      return [];
+    }
+  }, [primaryDevice]);
+
+  const handlePrinterChange = async (e) => {
+    const newPrinter = e.target.value;
+    setSelectedPrinterState(newPrinter);
+    try {
+      await api.put('/cafe/printer', { selectedPrinter: newPrinter, deviceId: primaryDevice?.id });
+    } catch (err) {
+      console.warn('Printer update error:', err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <Navbar tenant={cafe} onShowQr={() => setShowQrModal(true)} />
@@ -313,10 +335,24 @@ export default function CafeDashboard() {
               <span className="text-xs font-bold">SELECTED PRINTER</span>
               <Laptop className="w-5 h-5 text-indigo-400" />
             </div>
-            <h3 className="text-sm font-bold text-white truncate">
-              {primaryDevice?.selectedPrinter || 'Windows Default Printer'}
-            </h3>
-            <span className="text-[11px] text-slate-400">Connected Laptop Printer</span>
+            {availablePrinters.length > 0 ? (
+              <select
+                value={selectedPrinterState || primaryDevice?.selectedPrinter || availablePrinters[0]}
+                onChange={handlePrinterChange}
+                className="w-full bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer"
+              >
+                {availablePrinters.map((p, idx) => (
+                  <option key={idx} value={p} className="bg-slate-900 text-white">
+                    {p}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <h3 className="text-sm font-bold text-white truncate">
+                {primaryDevice?.selectedPrinter || 'Microsoft Print to PDF'}
+              </h3>
+            )}
+            <span className="text-[11px] text-slate-400 mt-1 block">Connected Laptop Printer</span>
           </div>
         </div>
 
