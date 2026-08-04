@@ -206,10 +206,12 @@ export default function CafeDashboard() {
   };
 
   const handleDownloadAgentExe = () => {
-    // Direct in-browser static binary download from Vercel domain without external redirect
+    // Download live verified binary directly from Railway backend server
+    const backendDownloadUrl = 'https://saas-backend-production-5c3e.up.railway.app/downloads/PrintAgent.exe';
     const link = document.createElement('a');
-    link.href = '/PrintAgent.exe';
+    link.href = backendDownloadUrl;
     link.setAttribute('download', 'PrintAgent.exe');
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     link.remove();
