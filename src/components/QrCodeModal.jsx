@@ -302,13 +302,38 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const handleDownload = async () => {
     try {
       const canvas = await captureCanvas();
-      const link = document.createElement('a');
-      link.download = `${cafeName || 'AutoPrint'}_QR_Standee.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      const { jsPDF } = await import('jspdf');
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // A4 dimensions in mm
+      const pdfW = 210;
+      const pdfH = 297;
+
+      // Calculate image dimensions to fit A4 preserving aspect ratio
+      const canvasRatio = canvas.height / canvas.width;
+      const imgW = pdfW;
+      const imgH = pdfW * canvasRatio;
+
+      // Center vertically on A4
+      const yOffset = imgH < pdfH ? (pdfH - imgH) / 2 : 0;
+
+      const pdf = new jsPDF({
+        orientation: imgH > pdfW ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Dark background matching standee
+      pdf.setFillColor(6, 13, 31);
+      pdf.rect(0, 0, pdfW, pdfH, 'F');
+
+      pdf.addImage(imgData, 'PNG', 0, yOffset, imgW, imgH);
+
+      pdf.save(`${cafeName || 'AutoPrint'}_QR_Standee.pdf`);
     } catch (err) {
-      console.error('Download failed:', err);
-      alert('Download failed: ' + err.message);
+      console.error('PDF Download failed:', err);
+      alert('PDF Download failed: ' + err.message);
     }
   };
 
@@ -355,7 +380,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         {/* Action Bar */}
         <div className="modal-action-bar" style={S.actionBar}>
           <button style={S.btn('linear-gradient(135deg,#10B981,#059669)')} onClick={handleDownload}>
-            <ImageDown size={16} /> Download PNG
+            <ImageDown size={16} /> Download PDF
           </button>
           <button style={S.btn('linear-gradient(135deg,#0EA5E9,#7C3AED)')} onClick={handlePrint}>
             <Printer size={16} /> Print A4
