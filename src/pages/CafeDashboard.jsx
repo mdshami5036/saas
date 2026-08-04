@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
@@ -230,7 +230,7 @@ export default function CafeDashboard() {
 
   const [selectedPrinterState, setSelectedPrinterState] = useState('');
 
-  const availablePrinters = React.useMemo(() => {
+  const availablePrinters = useMemo(() => {
     if (!primaryDevice || !primaryDevice.availablePrinters) return [];
     try {
       if (Array.isArray(primaryDevice.availablePrinters)) return primaryDevice.availablePrinters;
