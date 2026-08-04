@@ -92,7 +92,7 @@ export default function CafeDashboard() {
     }
 
     try {
-      setLoading(true);
+      if (!data) setLoading(true);
       const res = await api.get('/cafe/dashboard');
       if (res.data && res.data.success) {
         const cafeData = res.data.cafe;
