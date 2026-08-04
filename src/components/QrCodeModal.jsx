@@ -288,38 +288,68 @@ function StandeeCard({ cafeName, websiteUrl, bwPrice, colorPrice }) {
 export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, colorPrice = 10.0, onClose }) {
   const standeeRef = useRef(null);
 
+  const captureCanvas = async () => {
+    const html2canvas = (await import('html2canvas')).default;
+    return html2canvas(standeeRef.current, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: '#060d1f',
+      logging: false,
+      allowTaint: true,
+    });
+  };
+
   const handleDownload = async () => {
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(standeeRef.current, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#060d1f',
-        logging: false,
-      });
+      const canvas = await captureCanvas();
       const link = document.createElement('a');
       link.download = `${cafeName || 'AutoPrint'}_QR_Standee.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
       console.error('Download failed:', err);
-      alert('Download failed. Please try Print instead.');
+      alert('Download failed: ' + err.message);
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    try {
+      // Capture standee as high-res image using html2canvas
+      const canvas = await captureCanvas();
+      const imgData = canvas.toDataURL('image/png');
+
+      // Open a clean new window with just the image for printing
+      const pw = window.open('', '_blank');
+      pw.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>QR Standee - ${cafeName || 'AutoPrint'}</title>
+            <style>
+              * { margin:0; padding:0; box-sizing:border-box; }
+              body { background:#060d1f; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+              img { max-width:100%; height:auto; display:block; }
+              @media print {
+                body { background:#060d1f !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+                img { width:100%; page-break-inside:avoid; }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${imgData}" />
+            <script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; }<\/script>
+          </body>
+        </html>
+      `);
+      pw.document.close();
+    } catch (err) {
+      console.error('Print failed:', err);
+      alert('Print failed: ' + err.message);
+    }
   };
 
   return (
     <>
-      <style>{`
-        @media print {
-          body > * { display: none !important; }
-          #standee-print-area { display: block !important; position: fixed; top:0; left:0; width:100vw; z-index:99999; }
-          .modal-action-bar { display: none !important; }
-        }
-      `}</style>
 
       <div style={S.overlay}>
         {/* Action Bar */}
