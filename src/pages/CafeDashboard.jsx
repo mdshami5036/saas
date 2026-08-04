@@ -584,6 +584,8 @@ export default function CafeDashboard() {
         <QrCodeModal
           cafeName={cafe?.name}
           websiteUrl={cafe?.websiteUrl}
+          bwPrice={cafe?.bwPricePerPage || 2.0}
+          colorPrice={cafe?.colorPricePerPage || 10.0}
           onClose={() => setShowQrModal(false)}
         />
       )}
