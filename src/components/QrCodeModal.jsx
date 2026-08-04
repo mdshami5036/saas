@@ -65,11 +65,11 @@ function StandeeCard({ cafeName, websiteUrl, bwPrice, colorPrice }) {
       <div
         className="standee-root print-standee-root"
         style={{
-          width: w, borderRadius:28,
+          width: w,
+          borderRadius: 0,
           background:'linear-gradient(140deg,#060d1f 0%,#0b1535 30%,#100d32 60%,#060d1f 100%)',
-          border:'2px solid transparent',
-          backgroundClip:'border-box',
-          boxShadow:'0 0 80px 10px #0EA5E922, 0 0 0 2px #7C3AED44 inset, 0 0 0 4px #0EA5E922 inset',
+          border: 'none',
+          boxShadow: 'none',
           overflow:'hidden', position:'relative',
           padding:'26px 22px 24px',
         }}
@@ -290,12 +290,19 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
   const captureCanvas = async () => {
     const html2canvas = (await import('html2canvas')).default;
-    return html2canvas(standeeRef.current, {
+    const el = standeeRef.current;
+    return html2canvas(el, {
       scale: 3,
       useCORS: true,
       backgroundColor: '#060d1f',
       logging: false,
       allowTaint: true,
+      width: el.offsetWidth,
+      height: el.scrollHeight,      // full height — never cuts
+      windowWidth: el.offsetWidth,
+      windowHeight: el.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
     });
   };
 
@@ -306,29 +313,25 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
       const imgData = canvas.toDataURL('image/png');
 
-      // A4 dimensions in mm
+      // Use canvas aspect ratio to create a custom page size
+      // so the image always fits on ONE page with no cutting.
+      // We use A4 width (210mm) and calculate height from canvas ratio.
       const pdfW = 210;
-      const pdfH = 297;
-
-      // Calculate image dimensions to fit A4 preserving aspect ratio
       const canvasRatio = canvas.height / canvas.width;
-      const imgW = pdfW;
-      const imgH = pdfW * canvasRatio;
-
-      // Center vertically on A4
-      const yOffset = imgH < pdfH ? (pdfH - imgH) / 2 : 0;
+      const pdfH = Math.round(pdfW * canvasRatio);
 
       const pdf = new jsPDF({
-        orientation: imgH > pdfW ? 'portrait' : 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
-        format: 'a4',
+        format: [pdfW, pdfH],  // custom page exactly matching standee
       });
 
-      // Dark background matching standee
+      // Fill dark background
       pdf.setFillColor(6, 13, 31);
       pdf.rect(0, 0, pdfW, pdfH, 'F');
 
-      pdf.addImage(imgData, 'PNG', 0, yOffset, imgW, imgH);
+      // Add image to fill full page — no gaps, no cuts
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
 
       pdf.save(`${cafeName || 'AutoPrint'}_QR_Standee.pdf`);
     } catch (err) {
