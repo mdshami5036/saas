@@ -101,8 +101,8 @@ export default function CafeDashboard() {
         setData(res.data);
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
-        if (!isEditingRzp) {
-          setRzpKeyId(res.data.cafe.razorpayKeyId || '');
+        if (!rzpKeyId && res.data.cafe.razorpayKeyId) {
+          setRzpKeyId(res.data.cafe.razorpayKeyId);
         }
 
         const jobsRes = await api.get('/cafe/jobs?limit=10');
@@ -420,6 +420,7 @@ export default function CafeDashboard() {
                 required
                 placeholder="rzp_live_xxxxxxxx"
                 value={rzpKeyId}
+                onFocus={() => setIsEditingRzp(true)}
                 onChange={(e) => {
                   setIsEditingRzp(true);
                   setRzpKeyId(e.target.value);
@@ -433,6 +434,7 @@ export default function CafeDashboard() {
                 type="password"
                 placeholder="Enter Secret (leave empty if unchanged)"
                 value={rzpKeySecret}
+                onFocus={() => setIsEditingRzp(true)}
                 onChange={(e) => {
                   setIsEditingRzp(true);
                   setRzpKeySecret(e.target.value);
