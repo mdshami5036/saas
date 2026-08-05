@@ -20,36 +20,61 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
   const handleDownloadJPG = async () => {
     try {
-      // Ensure all custom web fonts are fully loaded before capturing
+      // 1. Ensure all custom web fonts are fully loaded before export
       if (document.fonts) {
         await document.fonts.ready;
       }
 
       const html2canvas = (await import('html2canvas')).default;
       const el = cardRef.current;
+      if (!el) return;
 
+      const targetWidth = el.offsetWidth;
+      const targetHeight = el.offsetHeight;
+
+      // 2. Export canvas with ZERO scroll offset & zero clone Y-shift
       const canvas = await html2canvas(el, {
-        scale: 3, // High DPI for 5x7 print quality
+        scale: 3, // High DPI (300 DPI equivalent)
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
-        width: el.offsetWidth,
-        height: el.offsetHeight,
         scrollX: 0,
         scrollY: 0,
+        x: 0,
+        y: 0,
+        width: targetWidth,
+        height: targetHeight,
+        windowWidth: targetWidth,
+        windowHeight: targetHeight,
+        onclone: (clonedDoc, clonedEl) => {
+          // Force cloned element to render strictly at origin (0, 0)
+          clonedEl.style.position = 'relative';
+          clonedEl.style.top = '0px';
+          clonedEl.style.left = '0px';
+          clonedEl.style.transform = 'none';
+          clonedEl.style.margin = '0px';
+          clonedEl.style.boxShadow = 'none';
+
+          if (clonedEl.parentElement) {
+            clonedEl.parentElement.style.padding = '0px';
+            clonedEl.parentElement.style.margin = '0px';
+            clonedEl.parentElement.style.overflow = 'visible';
+            clonedEl.parentElement.style.display = 'block';
+          }
+        },
       });
 
       const link = document.createElement('a');
       link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.href = canvas.toDataURL('image/jpeg', 0.98);
       link.click();
     } catch (err) {
       alert('Download failed: ' + err.message);
     }
   };
 
-  /* Exact Color System */
+  /* Color System */
   const BLUE_PRIMARY = '#1d4ed8'; // Crisp Royal Blue
   const BLUE_ACCENT = '#2563eb';
   const BLUE_BG_LIGHT = '#f0f5ff';
@@ -57,7 +82,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const TEXT_MUTED = '#475569';
   const BORDER_LIGHT = '#cbd5e1';
 
-  // SVG Step Badge Helper (100% html2canvas shift-proof)
+  // SVG Step Badge Helper (100% html2canvas shift-proof vector)
   const StepBadge = ({ number }) => (
     <svg width="22" height="22" viewBox="0 0 22 22" style={{ display: 'block', margin: '0 auto 4px' }}>
       <circle cx="11" cy="11" r="10.5" fill={BLUE_ACCENT} />
@@ -107,7 +132,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-           5 x 7 INCH PREMIUM STANDEE CANVAS (100% html2canvas Shift-Proof)
+           5 x 7 INCH PREMIUM STANDEE CANVAS (100% Export Shift-Proof)
         ════════════════════════════════════════════════════════════════ */}
         <div
           ref={cardRef}
@@ -150,7 +175,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
               </svg>
             </div>
 
-            {/* Business Name Badge Container (Direct background container to prevent text shift) */}
+            {/* Business Name Badge Container */}
             <div style={{ margin: '2px 0 6px', textAlign: 'center' }}>
               <div style={{
                 display: 'inline-block',
@@ -316,7 +341,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             </div>
           </div>
 
-          {/* ── HOW TO PRINT FROM PHONE (4 Steps - Shift-Proof Badges) ── */}
+          {/* ── HOW TO PRINT FROM PHONE (4 Steps) ── */}
           <div style={{
             borderRadius: 16, padding: '10px 10px',
             background: BLUE_BG_LIGHT, border: `1px solid ${BORDER_LIGHT}`,
