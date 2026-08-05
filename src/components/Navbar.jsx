@@ -19,6 +19,7 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
     { label: 'Contact Us', path: '/contact' },
     { label: 'Privacy Policy', path: '/privacy-policy' },
     { label: 'Terms', path: '/terms-conditions' },
+    { label: 'Disclaimer', path: '/disclaimer' },
   ];
 
   return (

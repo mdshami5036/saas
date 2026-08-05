@@ -10,6 +10,7 @@ import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
+import Disclaimer from './pages/Disclaimer';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-conditions" element={<TermsConditions />} />
+      <Route path="/disclaimer" element={<Disclaimer />} />
       <Route path="/cafe/:slug" element={<CustomerPortal />} />
       <Route path="/login" element={<CafeLogin />} />
       <Route path="/register" element={<CafeRegister />} />

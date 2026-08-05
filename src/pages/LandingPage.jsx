@@ -584,6 +584,7 @@ export default function LandingPage() {
                 <li><Link to="/contact" style={{ color: 'inherit', textDecoration: 'none' }}>Contact Us</Link></li>
                 <li><Link to="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link></li>
                 <li><Link to="/terms-conditions" style={{ color: 'inherit', textDecoration: 'none' }}>Terms & Conditions</Link></li>
+                <li><Link to="/disclaimer" style={{ color: 'inherit', textDecoration: 'none' }}>Disclaimer</Link></li>
                 <li><Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Cafe Login</Link></li>
                 <li><Link to="/register" style={{ color: 'inherit', textDecoration: 'none' }}>Register New Shop</Link></li>
               </ul>
