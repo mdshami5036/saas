@@ -21,7 +21,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const cardRef = useRef(null);
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION: PDF (Native Browser Rendering via html-to-image)
+     EXPORT FUNCTION: PDF (Native Browser Rendering)
   ─────────────────────────────────────────────────────────────── */
   const handleDownloadPDF = async () => {
     try {
@@ -34,7 +34,6 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
       const { jsPDF } = await import('jspdf');
 
-      // Native browser canvas rendering (1:1 identical to screen)
       const dataUrl = await toJpeg(el, {
         quality: 0.98,
         pixelRatio: 3, // 300 DPI High-Res Print Quality
@@ -42,7 +41,6 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         backgroundColor: '#ffffff',
       });
 
-      // Convert px to mm (1 px = 0.264583 mm) for exact PDF page format
       const pxToMm = 0.264583;
       const pdfW = Math.round(el.offsetWidth * pxToMm);
       const pdfH = Math.round(el.offsetHeight * pxToMm);
@@ -61,7 +59,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   };
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION: JPG (Native Browser Rendering via html-to-image)
+     EXPORT FUNCTION: JPG (Native Browser Rendering)
   ─────────────────────────────────────────────────────────────── */
   const handleDownloadJPG = async () => {
     try {
@@ -72,7 +70,6 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       const el = cardRef.current;
       if (!el) return;
 
-      // Native browser canvas rendering (1:1 identical to screen)
       const dataUrl = await toJpeg(el, {
         quality: 0.98,
         pixelRatio: 3, // 300 DPI High-Res Print Quality
@@ -112,7 +109,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       {/* Modal Overlay */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)',
+        background: 'rgba(15, 23, 42, 0.82)', backdropFilter: 'blur(10px)',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'flex-start', overflowY: 'auto',
         padding: '20px 10px 100px',
@@ -159,34 +156,59 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-           5 x 7 INCH PREMIUM STANDEE CANVAS
+           5 x 7 INCH PREMIUM STANDEE CANVAS (STYLISH PREMIUM BACKGROUND)
         ════════════════════════════════════════════════════════════════ */}
         <div
           ref={cardRef}
           style={{
             width: 500,
-            background: '#ffffff',
-            borderRadius: 20,
+            background: 'linear-gradient(150deg, #ffffff 0%, #f8fafc 50%, #eff6ff 100%)',
+            borderRadius: 22,
             padding: '24px 22px 20px',
             fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
             boxSizing: 'border-box',
             position: 'relative',
+            overflow: 'hidden',
             boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
+            border: '1px solid rgba(37, 99, 235, 0.12)',
           }}
         >
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@700&display=swap');
           `}</style>
 
-          {/* Top Decorative Blue Bar */}
+          {/* ── STYLISH BACKGROUND ACCENTS ── */}
+          {/* Subtle Geometric Dot Grid */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+            backgroundImage: 'radial-gradient(#2563eb 0.75px, transparent 0.75px)',
+            backgroundSize: '16px 16px',
+            opacity: 0.07,
+          }} />
+
+          {/* Top-Right Glowing Blue Orb */}
+          <div style={{
+            position: 'absolute', top: -70, right: -70, width: 250, height: 250, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+
+          {/* Bottom-Left Soft Glow Orb */}
+          <div style={{
+            position: 'absolute', bottom: -50, left: -50, width: 220, height: 220, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(29, 78, 216, 0.1) 0%, transparent 70%)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+
+          {/* Top Decorative Blue Gradient Bar */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: 10,
             background: 'linear-gradient(90deg, #1e40af, #2563eb, #3b82f6)',
-            borderTopLeftRadius: 20, borderTopRightRadius: 20,
+            borderTopLeftRadius: 22, borderTopRightRadius: 22, zIndex: 1,
           }} />
 
           {/* ── TOP SECTION: LOGO + BRUSH BUSINESS NAME ── */}
-          <div style={{ textAlign: 'center', marginBottom: 12 }}>
+          <div style={{ textAlign: 'center', marginBottom: 12, position: 'relative', zIndex: 1 }}>
             {/* Top Printer Icon */}
             <div style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -211,6 +233,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
                 padding: '4px 24px',
                 maxWidth: '90%',
                 boxSizing: 'border-box',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
               }}>
                 <h1 style={{
                   fontSize: cafeName && cafeName.length > 16 ? 22 : 26,
@@ -239,12 +262,13 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
           </div>
 
           {/* ── PRICE SECTION ── */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16, position: 'relative', zIndex: 1 }}>
             {/* Left Card: B&W */}
             <div style={{
               flex: 1, borderRadius: 16, padding: '10px 14px',
               display: 'flex', alignItems: 'center', gap: 12,
-              background: '#f8fafc', border: `1px solid ${BORDER_LIGHT}`,
+              background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`,
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.05)',
             }}>
               <div style={{
                 width: 38, height: 38, borderRadius: 12, flexShrink: 0,
@@ -265,7 +289,8 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             <div style={{
               flex: 1, borderRadius: 16, padding: '10px 14px',
               display: 'flex', alignItems: 'center', gap: 12,
-              background: '#f8fafc', border: `1px solid ${BORDER_LIGHT}`,
+              background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`,
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.05)',
             }}>
               <div style={{
                 width: 38, height: 38, borderRadius: 12, flexShrink: 0,
@@ -284,25 +309,25 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
           </div>
 
           {/* ── CENTER: LEFT FEATURES | QR CODE | RIGHT FEATURES ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, position: 'relative', zIndex: 1 }}>
             {/* Left Features Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 85, flexShrink: 0, textAlign: 'center' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <UploadCloud size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>UPLOAD<br />PDF FILE</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <ShieldCheck size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>SECURE<br />PAYMENT</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <Zap size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>INSTANT<br />PRINT</span>
@@ -314,7 +339,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
               <div style={{
                 background: '#ffffff', borderRadius: 20, padding: 12,
                 border: `2px solid ${BLUE_ACCENT}`,
-                boxShadow: '0 10px 25px rgba(37, 99, 235, 0.12)',
+                boxShadow: '0 12px 30px rgba(37, 99, 235, 0.16)',
                 position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center',
                 boxSizing: 'border-box', width: '100%',
               }}>
@@ -335,7 +360,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
                   color: '#ffffff', fontSize: 9.5, fontWeight: 800,
                   letterSpacing: '0.05em', textTransform: 'uppercase',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  boxShadow: '0 4px 10px rgba(37, 99, 235, 0.25)',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                 }}>
                   <Smartphone size={13} />
                   <span>SCAN & PRINT INSTANTLY</span>
@@ -346,21 +371,21 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             {/* Right Features Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 85, flexShrink: 0, textAlign: 'center' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <CheckCircle2 size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>SAFE &<br />RELIABLE</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <CreditCard size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>POWERED BY<br />RAZORPAY</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 12, background: BLUE_BG_LIGHT, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`, color: BLUE_ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
                   <Headphones size={19} strokeWidth={2.2} />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 800, color: TEXT_DARK, lineHeight: 1.1 }}>24×7<br />SUPPORT</span>
@@ -371,8 +396,9 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
           {/* ── HOW TO PRINT FROM PHONE (4 Steps) ── */}
           <div style={{
             borderRadius: 16, padding: '10px 10px',
-            background: BLUE_BG_LIGHT, border: `1px solid ${BORDER_LIGHT}`,
-            marginBottom: 14,
+            background: '#ffffff', border: `1px solid ${BORDER_LIGHT}`,
+            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.04)',
+            marginBottom: 14, position: 'relative', zIndex: 1,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', marginBottom: 8 }}>
               <div style={{ height: 1, flex: 1, background: '#cbd5e1' }} />
@@ -422,6 +448,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             padding: '8px 14px', borderRadius: 12,
             border: `1.5px solid ${BLUE_ACCENT}`, background: '#ffffff',
             boxShadow: '0 2px 8px rgba(37, 99, 235, 0.06)',
+            position: 'relative', zIndex: 1,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 24, height: 24, borderRadius: 6, background: BLUE_ACCENT, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
