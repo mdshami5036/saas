@@ -20,10 +20,14 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
   const handleDownloadJPG = async () => {
     try {
+      // Ensure all custom web fonts are fully loaded before capturing
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
       const html2canvas = (await import('html2canvas')).default;
       const el = cardRef.current;
 
-      // High quality html2canvas options
       const canvas = await html2canvas(el, {
         scale: 3, // High DPI for 5x7 print quality
         useCORS: true,
@@ -34,8 +38,6 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         height: el.offsetHeight,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: el.scrollWidth,
-        windowHeight: el.scrollHeight,
       });
 
       const link = document.createElement('a');
@@ -54,6 +56,16 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const TEXT_DARK = '#0f172a';
   const TEXT_MUTED = '#475569';
   const BORDER_LIGHT = '#cbd5e1';
+
+  // SVG Step Badge Helper (100% html2canvas shift-proof)
+  const StepBadge = ({ number }) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" style={{ display: 'block', margin: '0 auto 4px' }}>
+      <circle cx="11" cy="11" r="10.5" fill={BLUE_ACCENT} />
+      <text x="11" y="14.5" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="800" fontFamily="Arial, sans-serif">
+        {number}
+      </text>
+    </svg>
+  );
 
   return (
     <>
@@ -95,7 +107,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-           5 x 7 INCH PREMIUM STANDEE CANVAS (100% html2canvas Compatible)
+           5 x 7 INCH PREMIUM STANDEE CANVAS (100% html2canvas Shift-Proof)
         ════════════════════════════════════════════════════════════════ */}
         <div
           ref={cardRef}
@@ -123,41 +135,43 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
           {/* ── TOP SECTION: LOGO + BRUSH BUSINESS NAME ── */}
           <div style={{ textAlign: 'center', marginBottom: 12 }}>
-            {/* Top Printer Icon - Explicit SVG for html2canvas */}
+            {/* Top Printer Icon */}
             <div style={{
-              display: 'inline-flex', alignItems: 'center', justifyWidth: 'center',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 48, height: 48, borderRadius: 14, marginBottom: 8,
               background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
               boxShadow: '0 6px 16px rgba(37, 99, 235, 0.3)',
-              lineHeight: 1, padding: 10, boxSizing: 'border-box',
+              boxSizing: 'border-box',
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9" />
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg>
             </div>
 
-            {/* Business Name Container with SVG Brush Stroke */}
-            <div style={{ position: 'relative', display: 'block', width: '100%', margin: '2px 0 6px' }}>
-              {/* SVG Brush Texture Background (html2canvas safe) */}
-              <svg style={{ position: 'absolute', top: -4, left: '5%', width: '90%', height: '130%', zIndex: 0, pointerEvents: 'none' }} viewBox="0 0 400 60" preserveAspectRatio="none">
-                <path d="M 15 30 Q 5 8, 35 12 T 120 10 T 250 12 T 370 8 Q 395 30, 375 48 T 250 50 T 120 48 T 25 45 Q 5 38, 15 30 Z" fill="#e2e8f0" opacity="0.8" />
-              </svg>
-
-              <h1 style={{
-                position: 'relative', zIndex: 1,
-                fontSize: cafeName && cafeName.length > 16 ? 24 : 28,
-                fontWeight: 900,
-                fontFamily: "'Oswald', 'Inter', sans-serif",
-                color: TEXT_DARK,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                margin: 0, lineHeight: 1.2,
-                padding: '4px 10px',
+            {/* Business Name Badge Container (Direct background container to prevent text shift) */}
+            <div style={{ margin: '2px 0 6px', textAlign: 'center' }}>
+              <div style={{
+                display: 'inline-block',
+                background: '#e2e8f0',
+                borderRadius: 25,
+                padding: '4px 24px',
+                maxWidth: '90%',
+                boxSizing: 'border-box',
               }}>
-                {cafeName || 'BUSINESS NAME'}
-              </h1>
+                <h1 style={{
+                  fontSize: cafeName && cafeName.length > 16 ? 22 : 26,
+                  fontWeight: 900,
+                  fontFamily: "'Oswald', 'Inter', Arial, sans-serif",
+                  color: TEXT_DARK,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  margin: 0, lineHeight: 1.2,
+                }}>
+                  {cafeName || 'BUSINESS NAME'}
+                </h1>
+              </div>
             </div>
 
             {/* Fixed Tagline */}
@@ -302,7 +316,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             </div>
           </div>
 
-          {/* ── HOW TO PRINT FROM PHONE (4 Steps - html2canvas baseline safe) ── */}
+          {/* ── HOW TO PRINT FROM PHONE (4 Steps - Shift-Proof Badges) ── */}
           <div style={{
             borderRadius: 16, padding: '10px 10px',
             background: BLUE_BG_LIGHT, border: `1px solid ${BORDER_LIGHT}`,
@@ -319,7 +333,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               {/* Step 1 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: BLUE_ACCENT, color: '#ffffff', fontSize: 9, fontWeight: 900, lineHeight: '18px', textAlign: 'center', marginBottom: 3 }}>1</div>
+                <StepBadge number="1" />
                 <span style={{ fontSize: 8.5, fontWeight: 800, color: BLUE_PRIMARY, lineHeight: 1.1 }}>SCAN QR CODE</span>
                 <span style={{ fontSize: 7.5, color: TEXT_MUTED, marginTop: 2 }}>with camera / UPI</span>
               </div>
@@ -327,7 +341,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
               {/* Step 2 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: BLUE_ACCENT, color: '#ffffff', fontSize: 9, fontWeight: 900, lineHeight: '18px', textAlign: 'center', marginBottom: 3 }}>2</div>
+                <StepBadge number="2" />
                 <span style={{ fontSize: 8.5, fontWeight: 800, color: BLUE_PRIMARY, lineHeight: 1.1 }}>UPLOAD PDF FILE</span>
                 <span style={{ fontSize: 7.5, color: TEXT_MUTED, marginTop: 2 }}>& select options</span>
               </div>
@@ -335,7 +349,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
               {/* Step 3 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: BLUE_ACCENT, color: '#ffffff', fontSize: 9, fontWeight: 900, lineHeight: '18px', textAlign: 'center', marginBottom: 3 }}>3</div>
+                <StepBadge number="3" />
                 <span style={{ fontSize: 8.5, fontWeight: 800, color: BLUE_PRIMARY, lineHeight: 1.1 }}>PAY SECURELY</span>
                 <span style={{ fontSize: 7.5, color: TEXT_MUTED, marginTop: 2 }}>via UPI / Netbanking</span>
               </div>
@@ -343,7 +357,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
 
               {/* Step 4 */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', background: BLUE_ACCENT, color: '#ffffff', fontSize: 9, fontWeight: 900, lineHeight: '18px', textAlign: 'center', marginBottom: 3 }}>4</div>
+                <StepBadge number="4" />
                 <span style={{ fontSize: 8.5, fontWeight: 800, color: BLUE_PRIMARY, lineHeight: 1.1 }}>COLLECT PRINT</span>
                 <span style={{ fontSize: 7.5, color: TEXT_MUTED, marginTop: 2 }}>from counter</span>
               </div>
