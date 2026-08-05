@@ -639,12 +639,13 @@ export default function LandingPage() {
 
             {/* Col 2: Quick Links */}
             <div>
-              <h4 style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Quick Links</h4>
+              <h4 style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Pages & Legal</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: '#94a3b8' }}>
-                <li><a href="#how-it-works" style={{ color: 'inherit', textDecoration: 'none' }}>Kaise Kaam Karta Hai</a></li>
-                <li><a href="#benefits" style={{ color: 'inherit', textDecoration: 'none' }}>Dukan Fayde</a></li>
-                <li><a href="#calculator" style={{ color: 'inherit', textDecoration: 'none' }}>Income Estimator</a></li>
-                <li><Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Login</Link></li>
+                <li><Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>About Us</Link></li>
+                <li><Link to="/contact" style={{ color: 'inherit', textDecoration: 'none' }}>Contact Us</Link></li>
+                <li><Link to="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                <li><Link to="/terms-conditions" style={{ color: 'inherit', textDecoration: 'none' }}>Terms & Conditions</Link></li>
+                <li><Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Cafe Login</Link></li>
                 <li><Link to="/register" style={{ color: 'inherit', textDecoration: 'none' }}>Register New Shop</Link></li>
               </ul>
             </div>
