@@ -5,30 +5,60 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
+    background-color: #040914;
+    color: #f8fafc;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
   }
 }
 
+/* ── Global Interactive Hover Glow for All Cards Across All Pages ── */
 .glass-card {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 20px 45px -12px rgba(56, 189, 248, 0.25), 0 0 25px rgba(56, 189, 248, 0.15) !important;
 }
 
 .glass-card-hover {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  transform: translateY(-4px) scale(1.008);
+  box-shadow: 0 20px 45px -10px rgba(56, 189, 248, 0.3), 0 0 30px rgba(56, 189, 248, 0.2) !important;
+}
+
+.btn-glow {
+  position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.glass-card-hover:hover {
-  border-color: rgba(56, 189, 248, 0.4);
+.btn-glow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5);
 }
 
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
+/* ── Global Background Glow Orbs Animation ── */
+@keyframes anim-glow-orb {
+  0%, 100% { transform: translate(0px, 0px) scale(1); opacity: 0.7; }
+  50% { transform: translate(30px, -20px) scale(1.08); opacity: 1; }
+}
+
+.anim-glow-orb {
+  animation: anim-glow-orb 8s ease-in-out infinite;
 }
 
 @keyframes pulse-subtle {
