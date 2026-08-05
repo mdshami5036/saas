@@ -25,16 +25,6 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
           </div>
         </Link>
 
-        {/* Support Mail Link */}
-        <a
-          href="mailto:weve.cyber@gmail.com"
-          className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-400 text-xs font-bold border border-cyan-500/30 transition-all shadow-sm"
-          title="Click to send email directly"
-        >
-          <Mail className="w-3.5 h-3.5" />
-          <span className="underline">weve.cyber@gmail.com</span>
-        </a>
-
         <div className="flex items-center space-x-4">
           {tenant && (
             <>

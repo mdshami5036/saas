@@ -117,31 +117,6 @@ export default function LandingPage() {
         <div className="anim-glow" style={{ position: 'absolute', bottom: '-10%', left: '10%', width: '550px', height: '550px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)', animationDelay: '-1.5s' }} />
       </div>
 
-      {/* ── TOP CLICKABLE HEADLINE CONTACT BAR ── */}
-      <div style={{
-        background: 'linear-gradient(90deg, #1d4ed8, #2563eb, #7c3aed)',
-        padding: '8px 16px',
-        textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#ffffff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
-        boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', position: 'relative', zIndex: 101,
-      }}>
-        <Sparkles size={15} color="#fde047" />
-        <span>Official Support & Business Inquiry:</span>
-        <a
-          href="mailto:weve.cyber@gmail.com"
-          style={{
-            color: '#ffffff', textDecoration: 'none', background: 'rgba(255, 255, 255, 0.2)',
-            padding: '3px 14px', borderRadius: 20, border: '1px solid rgba(255, 255, 255, 0.4)',
-            display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 800,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', cursor: 'pointer',
-          }}
-          title="Tap to send email directly to weve.cyber@gmail.com"
-        >
-          <Mail size={14} color="#ffffff" />
-          <span style={{ textDecoration: 'underline' }}>weve.cyber@gmail.com</span>
-        </a>
-      </div>
-
       {/* ════════════════════════════════════════════════════════════════
          1. HEADER / NAVBAR
       ════════════════════════════════════════════════════════════════ */}
