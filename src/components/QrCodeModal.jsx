@@ -238,7 +238,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
             </div>
           </div>
 
-          {/* ── PRICE SECTION (No /page text) ── */}
+          {/* ── PRICE SECTION ── */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
             {/* Left Card: B&W */}
             <div style={{
@@ -255,8 +255,8 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
               </div>
               <div>
                 <div style={{ fontSize: 9.5, fontWeight: 800, color: TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>B&W PRINT</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: BLUE_PRIMARY, lineHeight: 1, marginTop: 2 }}>
-                  ₹{parseFloat(bwPrice).toFixed(0)}
+                <div style={{ fontSize: 22, fontWeight: 900, color: BLUE_PRIMARY, lineHeight: 1, marginTop: 2 }}>
+                  ₹{parseFloat(bwPrice).toFixed(0)} <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_MUTED }}>/Page</span>
                 </div>
               </div>
             </div>
@@ -276,8 +276,8 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
               </div>
               <div>
                 <div style={{ fontSize: 9.5, fontWeight: 800, color: TEXT_MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>FULL COLOR</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: BLUE_PRIMARY, lineHeight: 1, marginTop: 2 }}>
-                  ₹{parseFloat(colorPrice).toFixed(0)}
+                <div style={{ fontSize: 22, fontWeight: 900, color: BLUE_PRIMARY, lineHeight: 1, marginTop: 2 }}>
+                  ₹{parseFloat(colorPrice).toFixed(0)} <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_MUTED }}>/Page</span>
                 </div>
               </div>
             </div>
