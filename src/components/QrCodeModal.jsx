@@ -19,13 +19,11 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const cardRef = useRef(null);
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION FIX
-     Captures exact rendered element bounding rect on screen.
-     No layout changes or CSS hacks.
+     EXPORT FUNCTION (Captures ONLY the Standee Card)
   ─────────────────────────────────────────────────────────────── */
   const handleDownloadJPG = async () => {
     try {
-      // 1. Wait for custom web fonts to be fully loaded
+      // 1. Ensure custom web fonts are fully loaded
       if (document.fonts) {
         await document.fonts.ready;
       }
@@ -33,42 +31,38 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       const el = cardRef.current;
       if (!el) return;
 
-      // 2. Wait 100ms for QR SVG & icon rendering stability
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       const html2canvas = (await import('html2canvas')).default;
 
-      // 3. Get exact bounding rectangle of the rendered element on screen
-      const rect = el.getBoundingClientRect();
-
-      // 4. Capture exact viewport coordinates of rendered standee with zero whitespace offset
+      // 2. Capture ONLY the standee card using isolated cloned DOM body
       const canvas = await html2canvas(el, {
-        scale: 3, // High DPI (300 DPI print ready quality)
+        scale: 3, // High DPI (300 DPI print-ready quality)
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
-
-        // Crop canvas strictly to element's rendered bounding box on screen
-        x: rect.left,
-        y: rect.top,
-        width: rect.width,
-        height: rect.height,
-
-        // Match current viewport dimensions
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-
-        scrollX: 0,
-        scrollY: 0,
-
         onclone: (clonedDoc, clonedEl) => {
-          // Remove drop-shadow padding calculation during capture
+          // Reset styling on target card
+          clonedEl.style.position = 'relative';
+          clonedEl.style.top = '0px';
+          clonedEl.style.left = '0px';
+          clonedEl.style.margin = '0px';
+          clonedEl.style.transform = 'none';
           clonedEl.style.boxShadow = 'none';
+
+          // Clear cloned document body so ONLY the standee card exists in canvas
+          const body = clonedDoc.body;
+          body.innerHTML = '';
+          body.appendChild(clonedEl);
+          body.style.margin = '0px';
+          body.style.padding = '0px';
+          body.style.background = '#ffffff';
+          body.style.overflow = 'hidden';
+          body.style.width = `${el.offsetWidth}px`;
+          body.style.height = `${el.offsetHeight}px`;
         },
       });
 
-      // 5. Trigger download of pixel-perfect JPG
+      // 3. Download standalone image
       const link = document.createElement('a');
       link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.98);
