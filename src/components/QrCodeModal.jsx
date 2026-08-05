@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { toJpeg } from 'html-to-image';
 import {
   X,
   ImageDown,
@@ -20,7 +21,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const cardRef = useRef(null);
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION: PDF (Exact Standee Dimensions)
+     EXPORT FUNCTION: PDF (Native Browser Rendering via html-to-image)
   ─────────────────────────────────────────────────────────────── */
   const handleDownloadPDF = async () => {
     try {
@@ -31,38 +32,17 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       const el = cardRef.current;
       if (!el) return;
 
-      const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      const canvas = await html2canvas(el, {
-        scale: 3,
-        useCORS: true,
+      // Native browser canvas rendering (1:1 identical to screen)
+      const dataUrl = await toJpeg(el, {
+        quality: 0.98,
+        pixelRatio: 3, // 300 DPI High-Res Print Quality
+        cacheBust: true,
         backgroundColor: '#ffffff',
-        logging: false,
-        allowTaint: true,
-        onclone: (clonedDoc, clonedEl) => {
-          clonedEl.style.position = 'relative';
-          clonedEl.style.top = '0px';
-          clonedEl.style.left = '0px';
-          clonedEl.style.margin = '0px';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.boxShadow = 'none';
-
-          const body = clonedDoc.body;
-          body.innerHTML = '';
-          body.appendChild(clonedEl);
-          body.style.margin = '0px';
-          body.style.padding = '0px';
-          body.style.background = '#ffffff';
-          body.style.overflow = 'hidden';
-          body.style.width = `${el.offsetWidth}px`;
-          body.style.height = `${el.offsetHeight}px`;
-        },
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-
-      // Convert pixel dimensions to mm for exact PDF size (1 px = 0.264583 mm)
+      // Convert px to mm (1 px = 0.264583 mm) for exact PDF page format
       const pxToMm = 0.264583;
       const pdfW = Math.round(el.offsetWidth * pxToMm);
       const pdfH = Math.round(el.offsetHeight * pxToMm);
@@ -70,10 +50,10 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: [pdfW, pdfH], // Exact Standee Size (no margins or extra whitespace)
+        format: [pdfW, pdfH], // Exact Standee Size (no extra margins)
       });
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfW, pdfH);
       pdf.save(`${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.pdf`);
     } catch (err) {
       alert('PDF Download failed: ' + err.message);
@@ -81,7 +61,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   };
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION: JPG (Exact Standee Dimensions)
+     EXPORT FUNCTION: JPG (Native Browser Rendering via html-to-image)
   ─────────────────────────────────────────────────────────────── */
   const handleDownloadJPG = async () => {
     try {
@@ -92,37 +72,17 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       const el = cardRef.current;
       if (!el) return;
 
-      const html2canvas = (await import('html2canvas')).default;
-
-      const canvas = await html2canvas(el, {
-        scale: 3,
-        useCORS: true,
+      // Native browser canvas rendering (1:1 identical to screen)
+      const dataUrl = await toJpeg(el, {
+        quality: 0.98,
+        pixelRatio: 3, // 300 DPI High-Res Print Quality
+        cacheBust: true,
         backgroundColor: '#ffffff',
-        logging: false,
-        allowTaint: true,
-        onclone: (clonedDoc, clonedEl) => {
-          clonedEl.style.position = 'relative';
-          clonedEl.style.top = '0px';
-          clonedEl.style.left = '0px';
-          clonedEl.style.margin = '0px';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.boxShadow = 'none';
-
-          const body = clonedDoc.body;
-          body.innerHTML = '';
-          body.appendChild(clonedEl);
-          body.style.margin = '0px';
-          body.style.padding = '0px';
-          body.style.background = '#ffffff';
-          body.style.overflow = 'hidden';
-          body.style.width = `${el.offsetWidth}px`;
-          body.style.height = `${el.offsetHeight}px`;
-        },
       });
 
       const link = document.createElement('a');
       link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.98);
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       alert('JPG Download failed: ' + err.message);
