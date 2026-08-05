@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Printer, LogOut, ShieldAlert, LayoutDashboard, QrCode } from 'lucide-react';
+import { Printer, LogOut, ShieldAlert, LayoutDashboard, QrCode, Mail } from 'lucide-react';
 
 export default function Navbar({ tenant, isAdmin, onShowQr }) {
   const navigate = useNavigate();
@@ -24,6 +24,16 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
             </span>
           </div>
         </Link>
+
+        {/* Support Mail Link */}
+        <a
+          href="mailto:weve.cyber@gmail.com"
+          className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-400 text-xs font-bold border border-cyan-500/30 transition-all shadow-sm"
+          title="Click to send email directly"
+        >
+          <Mail className="w-3.5 h-3.5" />
+          <span className="underline">weve.cyber@gmail.com</span>
+        </a>
 
         <div className="flex items-center space-x-4">
           {tenant && (
