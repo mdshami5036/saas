@@ -139,11 +139,10 @@ export default function LandingPage() {
               <Printer size={24} color="#ffffff" strokeWidth={2.2} />
             </div>
             <span style={{
-              fontSize: 22, fontWeight: 900, fontFamily: "'Outfit', sans-serif",
+              fontSize: 24, fontWeight: 900, fontFamily: "'Outfit', sans-serif",
               letterSpacing: '-0.02em', color: '#ffffff',
             }}>
-              Auto<span style={{ color: '#38bdf8' }}>Print</span>
-              <span style={{ fontSize: 10, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '2px 6px', borderRadius: 6, marginLeft: 6, fontWeight: 700 }}>SaaS</span>
+              Weve<span style={{ color: '#38bdf8' }}>Print</span>
             </span>
           </Link>
 
@@ -263,7 +262,7 @@ export default function LandingPage() {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }} />
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#10b981' }} />
                 </div>
-                <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Live AutoPrint Kiosk Simulator</span>
+                <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Live WevePrint Kiosk Simulator</span>
               </div>
               <span style={{ fontSize: 12, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '4px 10px', borderRadius: 20, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} /> System Online
@@ -327,7 +326,7 @@ export default function LandingPage() {
               4 SIMPLE STEPS
             </span>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, fontFamily: "'Outfit', sans-serif", margin: '10px 0 16px' }}>
-              AutoPrint Kaise Kaam Karta Hai?
+              WevePrint Kaise Kaam Karta Hai?
             </h2>
             <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: '600px', margin: '0 auto' }}>
               Grahak aur Dukan-dar dono ke liye 100% aasan aur automatic process.
@@ -396,7 +395,7 @@ export default function LandingPage() {
           
           <div style={{ textAlign: 'center', marginBottom: 60 }}>
             <span style={{ fontSize: 13, fontWeight: 800, color: '#818cf8', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              WHY CHOOSE AUTOPRINT
+              WHY CHOOSE WEVEPRINT
             </span>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, fontFamily: "'Outfit', sans-serif", margin: '10px 0 16px' }}>
               Dukandar aur Cyber Cafe Ke Liye Bemisaal Fayde
@@ -442,7 +441,7 @@ export default function LandingPage() {
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 8px', color: '#f8fafc' }}>Zero Privacy Risk</h3>
                 <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-                  WhatsApp par personal photos ya Aadhaar file aane se privacy ka khatra rehta hai. AutoPrint file ko print ke baad turant delete kar deta hai.
+                  WhatsApp par personal photos ya Aadhaar file aane se privacy ka khatra rehta hai. WevePrint file ko print ke baad turant delete kar deta hai.
                 </p>
               </div>
             </div>
@@ -622,8 +621,8 @@ export default function LandingPage() {
                 <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Printer size={20} color="#ffffff" />
                 </div>
-                <span style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: '#ffffff' }}>
-                  Auto<span style={{ color: '#38bdf8' }}>Print</span>
+                <span style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: '#ffffff' }}>
+                  Weve<span style={{ color: '#38bdf8' }}>Print</span>
                 </span>
               </div>
               <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 20 }}>
@@ -676,7 +675,7 @@ export default function LandingPage() {
             flexWrap: 'wrap', gap: 16, fontSize: 13, color: '#64748b',
           }}>
             <div>
-              © {new Date().getFullYear()} AutoPrint SaaS Platform. All Rights Reserved.
+              © {new Date().getFullYear()} WevePrint. All Rights Reserved.
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               Crafted with <Heart size={14} color="#ef4444" fill="#ef4444" /> for Smart Indian Businesses

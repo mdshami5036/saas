@@ -52,7 +52,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       });
 
       pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfW, pdfH);
-      pdf.save(`${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.pdf`);
+      pdf.save(`${(cafeName || 'WevePrint').replace(/\s+/g, '_')}_QR_Standee.pdf`);
     } catch (err) {
       alert('PDF Download failed: ' + err.message);
     }
@@ -78,7 +78,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       });
 
       const link = document.createElement('a');
-      link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
+      link.download = `${(cafeName || 'WevePrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
       link.href = dataUrl;
       link.click();
     } catch (err) {

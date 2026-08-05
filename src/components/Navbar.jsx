@@ -20,10 +20,7 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
           </div>
           <div>
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
-              AutoPrint
-            </span>
-            <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">
-              SaaS
+              WevePrint
             </span>
           </div>
         </Link>
