@@ -1,9 +1,11 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Printer, LogOut, ShieldAlert, LayoutDashboard, QrCode, Mail } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Printer, LogOut, ShieldAlert, LayoutDashboard, QrCode, Menu, X } from 'lucide-react';
 
 export default function Navbar({ tenant, isAdmin, onShowQr }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('tenant_token');
@@ -11,10 +13,20 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
     navigate('/login');
   };
 
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'About Us', path: '/about' },
+    { label: 'Contact Us', path: '/contact' },
+    { label: 'Privacy Policy', path: '/privacy-policy' },
+    { label: 'Terms', path: '/terms-conditions' },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 w-full glass-card border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full glass-card border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-3 group">
+        
+        {/* Left: Brand Logo */}
+        <Link to="/" className="flex items-center space-x-3 group shrink-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
             <Printer className="w-6 h-6 text-white" />
           </div>
@@ -25,7 +37,30 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
           </div>
         </Link>
 
-        <div className="flex items-center space-x-4">
+        {/* Center: Desktop Navigation Bar */}
+        {!tenant && !isAdmin && (
+          <nav className="hidden lg:flex items-center space-x-6 text-xs sm:text-sm font-semibold">
+            {navLinks.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`transition-colors py-1 ${
+                    isActive
+                      ? 'text-cyan-400 font-extrabold border-b-2 border-cyan-400'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        {/* Right: Actions */}
+        <div className="flex items-center space-x-3">
           {tenant && (
             <>
               <button
@@ -72,23 +107,52 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
           )}
 
           {!tenant && !isAdmin && (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               >
-                Cafe Login
+                Login
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/25 transition-all hover:scale-[1.02]"
+                className="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-extrabold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/25 transition-all hover:scale-[1.02]"
               >
                 Register Cafe
               </Link>
+
+              {/* Mobile Hamburger Toggle */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                title="Toggle Menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && !tenant && !isAdmin && (
+        <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-4 py-4 space-y-2 animate-fadeIn">
+          {navLinks.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3 py-2 rounded-lg text-sm font-semibold ${
+                location.pathname === item.path
+                  ? 'bg-cyan-500/10 text-cyan-400 font-extrabold'
+                  : 'text-slate-300 hover:bg-slate-800'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </header>
   );
 }
