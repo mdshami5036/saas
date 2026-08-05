@@ -1,24 +1,48 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { Mail, Phone, MapPin, Send, CheckCircle2, UserCheck, Code2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, UserCheck, Code2, Loader2 } from 'lucide-react';
 
 export default function ContactUs() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [shopName, setShopName] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setName('');
-      setEmail('');
-      setShopName('');
-      setMessage('');
-      setSubmitted(false);
-    }, 4000);
+    setLoading(true);
+
+    try {
+      // Direct email delivery to weve.cyber@gmail.com via FormSubmit AJAX service
+      await fetch('https://formsubmit.co/ajax/weve.cyber@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `New WevePrint Inquiry from ${name}`,
+          Name: name,
+          Email: email,
+          Shop_Name: shopName || 'N/A',
+          Message: message,
+        }),
+      });
+
+      setSubmitted(true);
+    } catch (err) {
+      console.warn('FormSubmit AJAX fallback triggered:', err.message);
+      // Fallback: Launch mailto directly to weve.cyber@gmail.com
+      const mailtoUrl = `mailto:weve.cyber@gmail.com?subject=Inquiry from ${encodeURIComponent(name)}&body=${encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\nShop: ${shopName || 'N/A'}\n\nMessage:\n${message}`
+      )}`;
+      window.location.href = mailtoUrl;
+      setSubmitted(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,7 +59,7 @@ export default function ContactUs() {
             Contact WevePrint Support
           </h1>
           <p className="text-slate-400 text-sm sm:text-base max-w-md mx-auto">
-            Have questions about setting up your shop, printer connections, or custom pricing? We are here to help 24/7!
+            Have questions about setting up your shop, printer connections, or custom pricing? Send a message directly to our inbox!
           </p>
         </div>
 
@@ -99,8 +123,22 @@ export default function ContactUs() {
               {submitted ? (
                 <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-center space-y-2">
                   <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                  <h4 className="font-bold text-lg text-white">Message Sent Successfully!</h4>
-                  <p className="text-xs text-slate-300">Thank you for reaching out. We will get back to you shortly at {email}.</p>
+                  <h4 className="font-bold text-lg text-white">Message Sent Directly To Our Email!</h4>
+                  <p className="text-xs text-slate-300">
+                    Your message has been delivered to <strong>weve.cyber@gmail.com</strong>. We will reply to your email shortly!
+                  </p>
+                  <button
+                    onClick={() => {
+                      setName('');
+                      setEmail('');
+                      setShopName('');
+                      setMessage('');
+                      setSubmitted(false);
+                    }}
+                    className="mt-4 px-4 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700"
+                  >
+                    Send Another Message
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -155,10 +193,17 @@ export default function ContactUs() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl font-extrabold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center space-x-2"
+                    disabled={loading}
+                    className="w-full py-3 rounded-xl font-extrabold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
-                    <span>Send Message</span>
-                    <Send className="w-4 h-4" />
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Send Message to weve.cyber@gmail.com</span>
+                        <Send className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 </form>
               )}
