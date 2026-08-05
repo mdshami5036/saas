@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import {
   X,
   ImageDown,
+  FileText as PdfIcon,
   UploadCloud,
   ShieldCheck,
   Zap,
@@ -19,11 +20,10 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const cardRef = useRef(null);
 
   /* ─────────────────────────────────────────────────────────────
-     EXPORT FUNCTION (Captures ONLY the Standee Card)
+     EXPORT FUNCTION: PDF (Exact Standee Dimensions)
   ─────────────────────────────────────────────────────────────── */
-  const handleDownloadJPG = async () => {
+  const handleDownloadPDF = async () => {
     try {
-      // 1. Ensure custom web fonts are fully loaded
       if (document.fonts) {
         await document.fonts.ready;
       }
@@ -32,16 +32,15 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       if (!el) return;
 
       const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
 
-      // 2. Capture ONLY the standee card using isolated cloned DOM body
       const canvas = await html2canvas(el, {
-        scale: 3, // High DPI (300 DPI print-ready quality)
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
         onclone: (clonedDoc, clonedEl) => {
-          // Reset styling on target card
           clonedEl.style.position = 'relative';
           clonedEl.style.top = '0px';
           clonedEl.style.left = '0px';
@@ -49,7 +48,6 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
           clonedEl.style.transform = 'none';
           clonedEl.style.boxShadow = 'none';
 
-          // Clear cloned document body so ONLY the standee card exists in canvas
           const body = clonedDoc.body;
           body.innerHTML = '';
           body.appendChild(clonedEl);
@@ -62,13 +60,72 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         },
       });
 
-      // 3. Download standalone image
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      // Convert pixel dimensions to mm for exact PDF size (1 px = 0.264583 mm)
+      const pxToMm = 0.264583;
+      const pdfW = Math.round(el.offsetWidth * pxToMm);
+      const pdfH = Math.round(el.offsetHeight * pxToMm);
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [pdfW, pdfH], // Exact Standee Size (no margins or extra whitespace)
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      pdf.save(`${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.pdf`);
+    } catch (err) {
+      alert('PDF Download failed: ' + err.message);
+    }
+  };
+
+  /* ─────────────────────────────────────────────────────────────
+     EXPORT FUNCTION: JPG (Exact Standee Dimensions)
+  ─────────────────────────────────────────────────────────────── */
+  const handleDownloadJPG = async () => {
+    try {
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const el = cardRef.current;
+      if (!el) return;
+
+      const html2canvas = (await import('html2canvas')).default;
+
+      const canvas = await html2canvas(el, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        allowTaint: true,
+        onclone: (clonedDoc, clonedEl) => {
+          clonedEl.style.position = 'relative';
+          clonedEl.style.top = '0px';
+          clonedEl.style.left = '0px';
+          clonedEl.style.margin = '0px';
+          clonedEl.style.transform = 'none';
+          clonedEl.style.boxShadow = 'none';
+
+          const body = clonedDoc.body;
+          body.innerHTML = '';
+          body.appendChild(clonedEl);
+          body.style.margin = '0px';
+          body.style.padding = '0px';
+          body.style.background = '#ffffff';
+          body.style.overflow = 'hidden';
+          body.style.width = `${el.offsetWidth}px`;
+          body.style.height = `${el.offsetHeight}px`;
+        },
+      });
+
       const link = document.createElement('a');
       link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.98);
       link.click();
     } catch (err) {
-      alert('Download failed: ' + err.message);
+      alert('JPG Download failed: ' + err.message);
     }
   };
 
@@ -102,30 +159,42 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
       }}>
 
         {/* Action Controls */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, position: 'sticky', top: 10, zIndex: 10 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, position: 'sticky', top: 10, zIndex: 10 }}>
           <button
-            onClick={handleDownloadJPG}
+            onClick={handleDownloadPDF}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '12px 28px', borderRadius: 14,
-              fontWeight: 800, fontSize: 14, color: '#ffffff', border: 'none', cursor: 'pointer',
+              padding: '12px 22px', borderRadius: 14,
+              fontWeight: 800, fontSize: 13, color: '#ffffff', border: 'none', cursor: 'pointer',
               background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
               boxShadow: '0 8px 25px rgba(37, 99, 235, 0.4)', fontFamily: 'Inter, sans-serif',
             }}
           >
-            <ImageDown size={18} /> Download Standee (JPG)
+            <PdfIcon size={17} /> Download PDF
+          </button>
+          <button
+            onClick={handleDownloadJPG}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '12px 22px', borderRadius: 14,
+              fontWeight: 800, fontSize: 13, color: '#ffffff', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #059669, #10b981)',
+              boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)', fontFamily: 'Inter, sans-serif',
+            }}
+          >
+            <ImageDown size={17} /> Download JPG
           </button>
           <button
             onClick={onClose}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '12px 20px', borderRadius: 14,
-              fontWeight: 700, fontSize: 14, color: '#64748b',
+              padding: '12px 18px', borderRadius: 14,
+              fontWeight: 700, fontSize: 13, color: '#64748b',
               background: '#ffffff', border: '1px solid #cbd5e1', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif', boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
             }}
           >
-            <X size={18} /> Close
+            <X size={17} /> Close
           </button>
         </div>
 
