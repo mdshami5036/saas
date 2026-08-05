@@ -652,7 +652,7 @@ export default function LandingPage() {
                   <UserCheck size={18} color="#38bdf8" />
                   <div>
                     <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Director</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff' }}>MD Shami</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff' }}>Md Shami Ahmad</div>
                   </div>
                 </div>
 
@@ -661,7 +661,7 @@ export default function LandingPage() {
                   <Code2 size={18} color="#818cf8" />
                   <div>
                     <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Developer</div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff' }}>MD Shami</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#ffffff' }}>Md Shami Ahmad</div>
                   </div>
                 </div>
               </div>
