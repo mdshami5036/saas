@@ -18,53 +18,57 @@ import {
 export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, colorPrice = 10.0, onClose }) {
   const cardRef = useRef(null);
 
+  /* ─────────────────────────────────────────────────────────────
+     EXPORT FUNCTION FIX
+     Captures exact rendered element bounding rect on screen.
+     No layout changes or CSS hacks.
+  ─────────────────────────────────────────────────────────────── */
   const handleDownloadJPG = async () => {
     try {
-      // 1. Ensure all custom web fonts are fully loaded before export
+      // 1. Wait for custom web fonts to be fully loaded
       if (document.fonts) {
         await document.fonts.ready;
       }
 
-      const html2canvas = (await import('html2canvas')).default;
       const el = cardRef.current;
       if (!el) return;
 
-      const targetWidth = el.offsetWidth;
-      const targetHeight = el.offsetHeight;
+      // 2. Wait 100ms for QR SVG & icon rendering stability
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // 2. Export canvas with ZERO scroll offset & zero clone Y-shift
+      const html2canvas = (await import('html2canvas')).default;
+
+      // 3. Get exact bounding rectangle of the rendered element on screen
+      const rect = el.getBoundingClientRect();
+
+      // 4. Capture exact viewport coordinates of rendered standee with zero whitespace offset
       const canvas = await html2canvas(el, {
-        scale: 3, // High DPI (300 DPI equivalent)
+        scale: 3, // High DPI (300 DPI print ready quality)
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
         allowTaint: true,
+
+        // Crop canvas strictly to element's rendered bounding box on screen
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+
+        // Match current viewport dimensions
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+
         scrollX: 0,
         scrollY: 0,
-        x: 0,
-        y: 0,
-        width: targetWidth,
-        height: targetHeight,
-        windowWidth: targetWidth,
-        windowHeight: targetHeight,
-        onclone: (clonedDoc, clonedEl) => {
-          // Force cloned element to render strictly at origin (0, 0)
-          clonedEl.style.position = 'relative';
-          clonedEl.style.top = '0px';
-          clonedEl.style.left = '0px';
-          clonedEl.style.transform = 'none';
-          clonedEl.style.margin = '0px';
-          clonedEl.style.boxShadow = 'none';
 
-          if (clonedEl.parentElement) {
-            clonedEl.parentElement.style.padding = '0px';
-            clonedEl.parentElement.style.margin = '0px';
-            clonedEl.parentElement.style.overflow = 'visible';
-            clonedEl.parentElement.style.display = 'block';
-          }
+        onclone: (clonedDoc, clonedEl) => {
+          // Remove drop-shadow padding calculation during capture
+          clonedEl.style.boxShadow = 'none';
         },
       });
 
+      // 5. Trigger download of pixel-perfect JPG
       const link = document.createElement('a');
       link.download = `${(cafeName || 'AutoPrint').replace(/\s+/g, '_')}_QR_Standee.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.98);
@@ -82,7 +86,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
   const TEXT_MUTED = '#475569';
   const BORDER_LIGHT = '#cbd5e1';
 
-  // SVG Step Badge Helper (100% html2canvas shift-proof vector)
+  // SVG Step Badge Helper
   const StepBadge = ({ number }) => (
     <svg width="22" height="22" viewBox="0 0 22 22" style={{ display: 'block', margin: '0 auto 4px' }}>
       <circle cx="11" cy="11" r="10.5" fill={BLUE_ACCENT} />
@@ -132,7 +136,7 @@ export default function QrCodeModal({ cafeName, websiteUrl, bwPrice = 2.0, color
         </div>
 
         {/* ════════════════════════════════════════════════════════════════
-           5 x 7 INCH PREMIUM STANDEE CANVAS (100% Export Shift-Proof)
+           5 x 7 INCH PREMIUM STANDEE CANVAS
         ════════════════════════════════════════════════════════════════ */}
         <div
           ref={cardRef}
