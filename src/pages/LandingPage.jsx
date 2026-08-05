@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import {
   Printer,
   QrCode,
@@ -118,71 +119,9 @@ export default function LandingPage() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
-         1. HEADER / NAVBAR
+         1. UNIFIED TOP NAVBAR
       ════════════════════════════════════════════════════════════════ */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(4, 9, 20, 0.85)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-      }}>
-        <div style={{
-          maxWidth: '1200px', margin: '0 auto', padding: '16px 24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          {/* Logo */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 14,
-              background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 20px rgba(37, 99, 235, 0.4)',
-            }}>
-              <Printer size={24} color="#ffffff" strokeWidth={2.2} />
-            </div>
-            <span style={{
-              fontSize: 24, fontWeight: 900, fontFamily: "'Outfit', sans-serif",
-              letterSpacing: '-0.02em', color: '#ffffff',
-            }}>
-              Weve<span style={{ color: '#38bdf8' }}>Print</span>
-            </span>
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }} className="hidden-mobile">
-            <a href="#how-it-works" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'color 0.2s' }}>Kaise Kaam Karta Hai</a>
-            <a href="#benefits" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'color 0.2s' }}>Benefits</a>
-            <a href="#calculator" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'color 0.2s' }}>Revenue Calculator</a>
-            <a href="#faq" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'color 0.2s' }}>FAQ</a>
-          </nav>
-
-          {/* Header Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => navigate('/login')}
-              style={{
-                padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700,
-                color: '#cbd5e1', background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)', cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Login
-            </button>
-
-            <button
-              onClick={() => navigate('/register')}
-              className="btn-glow"
-              style={{
-                padding: '10px 22px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                color: '#ffffff', background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
-                border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              Get Started Free <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* ════════════════════════════════════════════════════════════════
          2. HERO SECTION
