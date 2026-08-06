@@ -270,7 +270,7 @@ export default function CafeDashboard() {
                     metrics?.isAgentOnline ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
                   }`}
                 />
-                <span>{metrics?.isAgentOnline ? 'PrintAgent Connected' : 'Agent Offline'}</span>
+                <span>{metrics?.isAgentOnline ? 'WevePrint Agent Connected' : 'WevePrint Agent Offline'}</span>
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -292,7 +292,7 @@ export default function CafeDashboard() {
               className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Download PrintAgent.exe</span>
+              <span>Download WevePrint Agent</span>
             </button>
           </div>
         </div>
