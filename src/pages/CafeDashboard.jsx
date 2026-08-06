@@ -556,15 +556,26 @@ export default function CafeDashboard() {
                       <td className="p-3 font-bold text-emerald-400">₹{job.totalPrice}</td>
                       <td className="p-3">
                         <span
-                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
                             job.jobStatus === 'COMPLETED'
-                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
                               : job.jobStatus === 'FAILED'
-                              ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                              : 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                              ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                              : job.jobStatus === 'SENT_TO_AGENT' || job.jobStatus === 'PRINTING'
+                              ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-700 animate-pulse'
+                              : 'bg-amber-950/80 text-amber-300 border border-amber-800'
                           }`}
                         >
-                          <span>{job.jobStatus}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            job.jobStatus === 'COMPLETED' ? 'bg-emerald-400' :
+                            job.jobStatus === 'FAILED' ? 'bg-rose-400' : 'bg-cyan-400 animate-ping'
+                          }`} />
+                          <span>
+                            {job.jobStatus === 'COMPLETED' ? 'Printed & Done' :
+                             job.jobStatus === 'SENT_TO_AGENT' ? 'Sent to Laptop Printer' :
+                             job.jobStatus === 'PRINTING' ? 'Printing Now...' :
+                             job.jobStatus === 'PENDING' ? 'Queued' : job.jobStatus}
+                          </span>
                         </span>
                       </td>
                       <td className="p-3 text-slate-400">
