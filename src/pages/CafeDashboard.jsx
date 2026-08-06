@@ -221,13 +221,34 @@ export default function CafeDashboard() {
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
   const availablePrinters = useMemo(() => {
-    if (!primaryDevice || !primaryDevice.availablePrinters) return [];
-    try {
-      if (Array.isArray(primaryDevice.availablePrinters)) return primaryDevice.availablePrinters;
-      return JSON.parse(primaryDevice.availablePrinters);
-    } catch (e) {
-      return [];
+    let list = [];
+    if (primaryDevice && primaryDevice.availablePrinters) {
+      try {
+        list = Array.isArray(primaryDevice.availablePrinters)
+          ? primaryDevice.availablePrinters
+          : JSON.parse(primaryDevice.availablePrinters);
+      } catch (e) {
+        list = [];
+      }
     }
+
+    const filtered = list.filter((p) => {
+      if (!p) return false;
+      const lower = p.toLowerCase();
+      return (
+        !lower.includes('print to pdf') &&
+        !lower.includes('onenote') &&
+        !lower.includes('fax') &&
+        !lower.includes('xps document writer') &&
+        !lower.includes('cutepdf') &&
+        !lower.includes('adobepdf') &&
+        !lower.includes('adobe pdf') &&
+        !lower.includes('foxit') &&
+        !lower.includes('notepad')
+      );
+    });
+
+    return Array.from(new Set(['Default Printer', ...filtered]));
   }, [primaryDevice]);
 
   const handlePrinterChange = async (e) => {
@@ -333,23 +354,17 @@ export default function CafeDashboard() {
               <span className="text-xs font-bold">SELECTED PRINTER</span>
               <Laptop className="w-5 h-5 text-indigo-400" />
             </div>
-            {availablePrinters.length > 0 ? (
-              <select
-                value={selectedPrinterState || primaryDevice?.selectedPrinter || availablePrinters[0]}
-                onChange={handlePrinterChange}
-                className="w-full bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {availablePrinters.map((p, idx) => (
-                  <option key={idx} value={p} className="bg-slate-900 text-white">
-                    {p}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <h3 className="text-sm font-bold text-white truncate">
-                {primaryDevice?.selectedPrinter || 'Microsoft Print to PDF'}
-              </h3>
-            )}
+            <select
+              value={selectedPrinterState || primaryDevice?.selectedPrinter || 'Default Printer'}
+              onChange={handlePrinterChange}
+              className="w-full bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer"
+            >
+              {availablePrinters.map((p, idx) => (
+                <option key={idx} value={p} className="bg-slate-900 text-white">
+                  {p}
+                </option>
+              ))}
+            </select>
             <span className="text-[11px] text-slate-400 mt-1 block">Connected Laptop Printer</span>
           </div>
         </div>
