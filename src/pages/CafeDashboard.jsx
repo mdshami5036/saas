@@ -351,21 +351,11 @@ export default function CafeDashboard() {
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800">
             <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">SELECTED PRINTER</span>
+              <span className="text-xs font-bold">CONNECTED PRINTER</span>
               <Laptop className="w-5 h-5 text-indigo-400" />
             </div>
-            <select
-              value={selectedPrinterState || primaryDevice?.selectedPrinter || 'Default Printer'}
-              onChange={handlePrinterChange}
-              className="w-full bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer"
-            >
-              {availablePrinters.map((p, idx) => (
-                <option key={idx} value={p} className="bg-slate-900 text-white">
-                  {p}
-                </option>
-              ))}
-            </select>
-            <span className="text-[11px] text-slate-400 mt-1 block">Connected Laptop Printer</span>
+            <h3 className="text-lg font-bold text-cyan-300 truncate">System Default Printer</h3>
+            <span className="text-[11px] text-emerald-400 font-medium mt-1 block">⚡ Automatic Laptop Spooling Active</span>
           </div>
         </div>
 
