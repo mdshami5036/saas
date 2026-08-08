@@ -207,10 +207,10 @@ export default function CafeDashboard() {
   };
 
   const handleDownloadAgentExe = () => {
-    const backendDownloadUrl = 'https://saas-backend-production-5c3e.up.railway.app/downloads/PrintAgent.exe';
+    const backendDownloadUrl = 'https://saas-backend-production-5c3e.up.railway.app/downloads/WevePrintAgent.exe';
     const link = document.createElement('a');
     link.href = backendDownloadUrl;
-    link.setAttribute('download', 'PrintAgent.exe');
+    link.setAttribute('download', 'WevePrintAgent.exe');
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
