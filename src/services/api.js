@@ -4,8 +4,12 @@ const getLiveApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return 'http://localhost:5000/api/v1';
+  if (typeof window !== 'undefined') {
+    const customUrl = localStorage.getItem('custom_backend_url');
+    if (customUrl) return customUrl;
+    if (window.location.hostname === 'localhost') {
+      return 'http://localhost:5000/api/v1';
+    }
   }
   return 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
 };
