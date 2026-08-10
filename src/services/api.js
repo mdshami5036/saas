@@ -11,7 +11,7 @@ const getLiveApiBaseUrl = () => {
       return 'http://localhost:5000/api/v1';
     }
   }
-  return 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
+  return 'https://saas-backend-lyd4.onrender.com/api/v1';
 };
 
 const API_BASE_URL = getLiveApiBaseUrl();
