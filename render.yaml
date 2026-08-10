@@ -6,7 +6,7 @@ services:
     region: singapore
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate
+    buildCommand: npm install && npm run build
     startCommand: npm start
     autoDeploy: true
     envVars:
