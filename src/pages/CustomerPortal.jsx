@@ -102,40 +102,44 @@ export default function CustomerPortal() {
     }
     setSelectedFile(file);
     setUploading(true);
-    setUploadProgress(20);
+    setUploadProgress(10);
     setPaymentErrorMessage('');
 
-    const pageCount = await fastDetectPdfPageCount(file);
-    setUploadProgress(60);
+    try {
+      const pageCount = await fastDetectPdfPageCount(file);
+      setUploadProgress(30);
 
-    const tempFileId = 'ram_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-    const mockUploaded = {
-      originalName: file.name,
-      fileName: tempFileId,
-      totalPages: pageCount,
-      size: file.size,
-    };
+      const formData = new FormData();
+      formData.append('pdf', file);
 
-    const formData = new FormData();
-    formData.append('pdf', file);
+      const res = await api.post('/public/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+          if (evt.total) {
+            const percent = Math.round((evt.loaded * 100) / evt.total);
+            setUploadProgress(30 + Math.round(percent * 0.65));
+          }
+        },
+      });
 
-    api.post('/public/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (evt) => {
-        const percent = Math.round((evt.loaded * 100) / evt.total);
-        setUploadProgress(percent);
-      },
-    }).then((res) => {
-      if (res.data && res.data.success) {
-        setUploadedFile(res.data.file);
+      if (res.data && res.data.success && res.data.file) {
+        const serverFile = res.data.file;
+        if (!serverFile.totalPages || serverFile.totalPages < pageCount) {
+          serverFile.totalPages = pageCount;
+        }
+        setUploadedFile(serverFile);
+        setUploadProgress(100);
+      } else {
+        throw new Error(res.data?.error || 'Failed to upload PDF document');
       }
-    }).catch(() => {
-      console.warn('Background upload sync info');
-    });
-
-    setUploadedFile(mockUploaded);
-    setUploadProgress(100);
-    setTimeout(() => setUploading(false), 200);
+    } catch (err) {
+      console.error('File upload error:', err);
+      setPaymentErrorMessage(err.response?.data?.error || 'PDF upload failed. Please try uploading your document again.');
+      setSelectedFile(null);
+      setUploadedFile(null);
+    } finally {
+      setTimeout(() => setUploading(false), 300);
+    }
   };
 
   // Strict Per-Cafe Price Calculation Logic
