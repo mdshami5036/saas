@@ -241,15 +241,8 @@ export default function CafeDashboard() {
       if (!p) return false;
       const lower = p.toLowerCase();
       return (
-        !lower.includes('print to pdf') &&
-        !lower.includes('onenote') &&
         !lower.includes('fax') &&
-        !lower.includes('xps document writer') &&
-        !lower.includes('cutepdf') &&
-        !lower.includes('adobepdf') &&
-        !lower.includes('adobe pdf') &&
-        !lower.includes('foxit') &&
-        !lower.includes('notepad')
+        !lower.includes('xps document writer')
       );
     });
 
@@ -411,7 +404,7 @@ export default function CafeDashboard() {
 
               <div className="flex items-center justify-between text-[11px] pt-1">
                 <span className={metrics?.isAgentOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
-                  {metrics?.isAgentOnline ? '⚡ Connected & Spooling' : '⏸️ Agent Offline'}
+                  {metrics?.isAgentOnline ? `⚡ Online (${availablePrinters.length} printer(s))` : '⏸️ Agent Offline'}
                 </span>
                 {printerSaveMsg && (
                   <span className="text-emerald-400 font-bold animate-pulse">{printerSaveMsg}</span>
