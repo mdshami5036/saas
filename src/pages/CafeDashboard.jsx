@@ -738,6 +738,7 @@ export default function CafeDashboard() {
                           }`} />
                           <span>
                             {job.jobStatus === 'COMPLETED' ? 'Printed & Done' :
+                             job.jobStatus === 'FAILED' ? `⚠️ Failed: ${job.errorMessage || 'Hardware Printer Needed'}` :
                              job.jobStatus === 'SENT_TO_AGENT' ? 'Sent to Laptop Printer' :
                              job.jobStatus === 'PRINTING' ? 'Printing Now...' :
                              job.jobStatus === 'PENDING' ? 'Queued' : job.jobStatus}
