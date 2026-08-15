@@ -245,8 +245,15 @@ export default function CafeDashboard() {
       if (!p) return false;
       const lower = p.toLowerCase();
       return (
+        !lower.includes('print to pdf') &&
+        !lower.includes('onenote') &&
         !lower.includes('fax') &&
-        !lower.includes('xps document writer')
+        !lower.includes('xps document writer') &&
+        !lower.includes('cutepdf') &&
+        !lower.includes('adobepdf') &&
+        !lower.includes('adobe pdf') &&
+        !lower.includes('foxit') &&
+        !lower.includes('notepad')
       );
     });
 
