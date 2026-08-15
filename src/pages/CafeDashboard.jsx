@@ -226,18 +226,23 @@ export default function CafeDashboard() {
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
   const availablePrinters = useMemo(() => {
-    let list = [];
-    if (primaryDevice && primaryDevice.availablePrinters) {
-      try {
-        list = Array.isArray(primaryDevice.availablePrinters)
-          ? primaryDevice.availablePrinters
-          : JSON.parse(primaryDevice.availablePrinters);
-      } catch (e) {
-        list = [];
-      }
+    let combined = [];
+    if (devices && Array.isArray(devices)) {
+      devices.forEach((dev) => {
+        if (dev && dev.availablePrinters) {
+          try {
+            const list = Array.isArray(dev.availablePrinters)
+              ? dev.availablePrinters
+              : JSON.parse(dev.availablePrinters);
+            if (Array.isArray(list)) {
+              combined.push(...list);
+            }
+          } catch (e) {}
+        }
+      });
     }
 
-    const filtered = list.filter((p) => {
+    const filtered = combined.filter((p) => {
       if (!p) return false;
       const lower = p.toLowerCase();
       return (
@@ -247,7 +252,7 @@ export default function CafeDashboard() {
     });
 
     return Array.from(new Set(['Default System Printer', ...filtered]));
-  }, [primaryDevice]);
+  }, [devices]);
 
   // Sync selected printer state when primaryDevice loads
   useEffect(() => {
