@@ -218,7 +218,6 @@ export default function CafeDashboard() {
   };
 
   // Printer selection state
-  const [selectedPrinterState, setSelectedPrinterState] = useState('');
   const [updatingPrinter, setUpdatingPrinter] = useState(false);
   const [printerSaveMsg, setPrinterSaveMsg] = useState('');
 
