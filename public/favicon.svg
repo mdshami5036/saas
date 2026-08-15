@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Glow Ring -->
+  <rect width="512" height="512" rx="112" fill="none" stroke="url(#iconGrad)" stroke-width="6" opacity="0.4"/>
+
+  <!-- Logo Group with Glow -->
+  <g filter="url(#glow)" transform="translate(32, 24)">
+    <!-- Cloud Waves emitting from top -->
+    <path d="M 230 180 C 210 130, 270 90, 310 110 C 340 70, 420 80, 430 140 C 470 150, 470 210, 430 230 L 230 230 Z" fill="url(#iconGrad)" opacity="0.9"/>
+    
+    <!-- Printer Main Body -->
+    <rect x="80" y="240" width="280" height="110" rx="20" fill="none" stroke="url(#iconGrad)" stroke-width="24" stroke-linejoin="round"/>
+    
+    <!-- Printer Top Paper Tray -->
+    <path d="M 140 240 L 140 160 C 140 145, 155 130, 170 130 L 220 130" fill="none" stroke="url(#iconGrad)" stroke-width="24" stroke-linecap="round"/>
+    
+    <!-- Printer Output Paper Sheet -->
+    <path d="M 120 350 L 140 430 C 142 438, 150 440, 160 440 L 280 440 C 290 440, 298 438, 300 430 L 320 350 Z" fill="url(#bgGrad)" stroke="url(#iconGrad)" stroke-width="20" stroke-linejoin="round"/>
+    
+    <!-- Printed Document Lines -->
+    <line x1="170" y1="390" x2="270" y2="390" stroke="url(#iconGrad)" stroke-width="12" stroke-linecap="round"/>
+    <line x1="190" y1="415" x2="250" y2="415" stroke="url(#iconGrad)" stroke-width="12" stroke-linecap="round"/>
+
+    <!-- Status Power Dot -->
+    <circle cx="310" cy="275" r="10" fill="#38bdf8"/>
+  </g>
+</svg>
