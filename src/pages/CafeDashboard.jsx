@@ -263,6 +263,23 @@ export default function CafeDashboard() {
     }
   }, [primaryDevice]);
 
+  const handlePrinterChangeAuto = async (newPrinter) => {
+    setSelectedPrinterState(newPrinter);
+    setPrinterSaveMsg('');
+    try {
+      await api.put('/cafe/printer', {
+        selectedPrinter: newPrinter,
+        deviceId: primaryDevice?.id,
+      });
+      setPrinterSaveMsg(`Switched to "${newPrinter}"`);
+    } catch (err) {
+      console.warn('Printer change warning:', err.message);
+      setPrinterSaveMsg(`Selected: "${newPrinter}"`);
+    } finally {
+      setTimeout(() => setPrinterSaveMsg(''), 3000);
+    }
+  };
+
   const handleSavePrinter = async (e) => {
     if (e) e.preventDefault();
     setUpdatingPrinter(true);
@@ -373,17 +390,34 @@ export default function CafeDashboard() {
             <span className="text-[11px] text-slate-400">Pending print queue</span>
           </div>
 
-          <div className="glass-card p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">ACTIVE PRINTER</span>
-              <Printer className="w-5 h-5 text-indigo-400" />
+          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-xs font-extrabold text-white tracking-wider">CONNECTED PRINTER</span>
+              <Printer className="w-5 h-5 text-cyan-400" />
             </div>
-            <h3 className="text-sm font-bold text-cyan-300 truncate">
-              {selectedPrinterState || 'Default System Printer'}
-            </h3>
-            <span className="text-[11px] text-emerald-400 font-medium mt-1 block">
-              {metrics?.isAgentOnline ? '⚡ Automatic Spooling Active' : '⏸️ Agent Offline'}
-            </span>
+
+            <div className="space-y-1">
+              <select
+                value={selectedPrinterState || 'Default System Printer'}
+                onChange={(e) => handlePrinterChangeAuto(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none cursor-pointer"
+              >
+                {availablePrinters.map((pr) => (
+                  <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                    {pr === 'Default System Printer' ? '⚡ System Default Printer' : `🖨️ ${pr}`}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <span className={metrics?.isAgentOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                  {metrics?.isAgentOnline ? '⚡ Connected & Spooling' : '⏸️ Agent Offline'}
+                </span>
+                {printerSaveMsg && (
+                  <span className="text-emerald-400 font-bold animate-pulse">{printerSaveMsg}</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
