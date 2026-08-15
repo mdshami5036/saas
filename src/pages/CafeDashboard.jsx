@@ -218,6 +218,8 @@ export default function CafeDashboard() {
   };
 
   // Printer selection state
+  const [bwPrinterState, setBwPrinterState] = useState('');
+  const [colorPrinterState, setColorPrinterState] = useState('');
   const [updatingPrinter, setUpdatingPrinter] = useState(false);
   const [printerSaveMsg, setPrinterSaveMsg] = useState('');
 
@@ -260,27 +262,37 @@ export default function CafeDashboard() {
     return Array.from(new Set(['Default System Printer', ...filtered]));
   }, [devices]);
 
-  // Sync selected printer state when primaryDevice loads
+  // Sync selected printer states when primaryDevice loads
   useEffect(() => {
-    if (primaryDevice && primaryDevice.selectedPrinter) {
-      setSelectedPrinterState(primaryDevice.selectedPrinter);
+    if (primaryDevice) {
+      if (primaryDevice.selectedPrinter) setSelectedPrinterState(primaryDevice.selectedPrinter);
+      if (primaryDevice.bwPrinter) setBwPrinterState(primaryDevice.bwPrinter);
+      if (primaryDevice.colorPrinter) setColorPrinterState(primaryDevice.colorPrinter);
     }
   }, [primaryDevice]);
 
-  const handlePrinterChangeAuto = async (newPrinter) => {
-    setSelectedPrinterState(newPrinter);
+  const handleSaveDualPrinters = async (e) => {
+    if (e) e.preventDefault();
+    setUpdatingPrinter(true);
     setPrinterSaveMsg('');
+
+    const targetBw = bwPrinterState || 'Default System Printer';
+    const targetColor = colorPrinterState || 'Default System Printer';
+
     try {
       await api.put('/cafe/printer', {
-        selectedPrinter: newPrinter,
+        bwPrinter: targetBw,
+        colorPrinter: targetColor,
+        selectedPrinter: targetBw,
         deviceId: primaryDevice?.id,
       });
-      setPrinterSaveMsg(`Switched to "${newPrinter}"`);
+      setPrinterSaveMsg(`Printer routing saved! B&W: "${targetBw}", Color: "${targetColor}"`);
     } catch (err) {
-      console.warn('Printer change warning:', err.message);
-      setPrinterSaveMsg(`Selected: "${newPrinter}"`);
+      console.warn('Printer update warning:', err.message);
+      setPrinterSaveMsg(`Saved for active session!`);
     } finally {
-      setTimeout(() => setPrinterSaveMsg(''), 3000);
+      setUpdatingPrinter(false);
+      setTimeout(() => setPrinterSaveMsg(''), 5000);
     }
   };
 
@@ -396,24 +408,25 @@ export default function CafeDashboard() {
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-extrabold text-white tracking-wider">CONNECTED PRINTER</span>
+              <span className="text-xs font-extrabold text-white tracking-wider">CONNECTED PRINTERS</span>
               <Printer className="w-5 h-5 text-cyan-400" />
             </div>
 
-            <div className="space-y-1">
-              <select
-                value={selectedPrinterState || 'Default System Printer'}
-                onChange={(e) => handlePrinterChangeAuto(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none cursor-pointer"
-              >
-                {availablePrinters.map((pr) => (
-                  <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
-                    {pr === 'Default System Printer' ? '⚡ System Default Printer' : `🖨️ ${pr}`}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-400">🖤 B&W:</span>
+                <span className="font-bold text-cyan-300 truncate max-w-[140px]">
+                  {bwPrinterState || 'Default System Printer'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-400">🎨 Color:</span>
+                <span className="font-bold text-emerald-300 truncate max-w-[140px]">
+                  {colorPrinterState || 'Default System Printer'}
+                </span>
+              </div>
 
-              <div className="flex items-center justify-between text-[11px] pt-1">
+              <div className="flex items-center justify-between text-[11px] pt-0.5">
                 <span className={metrics?.isAgentOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
                   {metrics?.isAgentOnline ? `⚡ Online (${availablePrinters.length} printer(s))` : '⏸️ Agent Offline'}
                 </span>
@@ -425,7 +438,7 @@ export default function CafeDashboard() {
           </div>
         </div>
 
-        {/* Connected Hardware Printer Selector Section */}
+        {/* Connected Hardware Printer Selector Section (B&W + Color Dual Routing) */}
         <div className="glass-card p-6 rounded-2xl border border-slate-800">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
             <div className="flex items-center space-x-2">
@@ -440,38 +453,70 @@ export default function CafeDashboard() {
             )}
           </div>
           <p className="text-xs text-slate-400 mb-4">
-            Select which physical printer to use for all customer print jobs. If set to <strong>Default System Printer</strong>, it will automatically use your Windows default printer.
+            Set separate physical printers for <strong>Black & White</strong> and <strong>Color</strong> print orders. Print jobs will automatically route to the corresponding printer!
           </p>
 
-          <form onSubmit={handleSavePrinter} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Select Active Hardware Printer</label>
-              <select
-                value={selectedPrinterState || 'Default System Printer'}
-                onChange={(e) => setSelectedPrinterState(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none"
-              >
-                {availablePrinters.map((pr) => (
-                  <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
-                    {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
-                  </option>
-                ))}
-              </select>
+          <form onSubmit={handleSaveDualPrinters} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Black & White Printer Dropdown */}
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
+                  <span>🖤 Select Black & White (B&W) Printer</span>
+                </label>
+                <select
+                  value={bwPrinterState || 'Default System Printer'}
+                  onChange={(e) => setBwPrinterState(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none cursor-pointer"
+                >
+                  {availablePrinters.map((pr) => (
+                    <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                      {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] text-slate-400 block">
+                  All customer B&W print jobs will automatically output on this printer.
+                </span>
+              </div>
+
+              {/* Color Printer Dropdown */}
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
+                  <span>🎨 Select Color Printer</span>
+                </label>
+                <select
+                  value={colorPrinterState || 'Default System Printer'}
+                  onChange={(e) => setColorPrinterState(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 font-bold text-xs focus:border-emerald-500 focus:outline-none cursor-pointer"
+                >
+                  {availablePrinters.map((pr) => (
+                    <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                      {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] text-slate-400 block">
+                  All customer Color print jobs will automatically output on this printer.
+                </span>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={updatingPrinter}
-              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2"
-            >
-              {updatingPrinter ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>Save Printer Selection</span>
-                </>
-              )}
-            </button>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={updatingPrinter}
+                className="py-2.5 px-6 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2"
+              >
+                {updatingPrinter ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Save Hardware Printer Preferences</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
