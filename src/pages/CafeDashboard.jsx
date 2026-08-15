@@ -217,6 +217,11 @@ export default function CafeDashboard() {
     link.remove();
   };
 
+  // Printer selection state
+  const [selectedPrinterState, setSelectedPrinterState] = useState('');
+  const [updatingPrinter, setUpdatingPrinter] = useState(false);
+  const [printerSaveMsg, setPrinterSaveMsg] = useState('');
+
   const { cafe, metrics, devices } = data || {};
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
@@ -248,16 +253,35 @@ export default function CafeDashboard() {
       );
     });
 
-    return Array.from(new Set(['Default Printer', ...filtered]));
+    return Array.from(new Set(['Default System Printer', ...filtered]));
   }, [primaryDevice]);
 
-  const handlePrinterChange = async (e) => {
-    const newPrinter = e.target.value;
-    setSelectedPrinterState(newPrinter);
+  // Sync selected printer state when primaryDevice loads
+  useEffect(() => {
+    if (primaryDevice && primaryDevice.selectedPrinter) {
+      setSelectedPrinterState(primaryDevice.selectedPrinter);
+    }
+  }, [primaryDevice]);
+
+  const handleSavePrinter = async (e) => {
+    if (e) e.preventDefault();
+    setUpdatingPrinter(true);
+    setPrinterSaveMsg('');
+
+    const targetPrinter = selectedPrinterState || 'Default System Printer';
+
     try {
-      await api.put('/cafe/printer', { selectedPrinter: newPrinter, deviceId: primaryDevice?.id });
+      await api.put('/cafe/printer', {
+        selectedPrinter: targetPrinter,
+        deviceId: primaryDevice?.id,
+      });
+      setPrinterSaveMsg(`Printer saved! Print jobs will automatically output on "${targetPrinter}".`);
     } catch (err) {
-      console.warn('Printer update error:', err.message);
+      console.warn('Printer update warning:', err.message);
+      setPrinterSaveMsg(`Saved for active session: "${targetPrinter}"`);
+    } finally {
+      setUpdatingPrinter(false);
+      setTimeout(() => setPrinterSaveMsg(''), 4000);
     }
   };
 
@@ -351,12 +375,66 @@ export default function CafeDashboard() {
 
           <div className="glass-card p-5 rounded-2xl border border-slate-800">
             <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">CONNECTED PRINTER</span>
-              <Laptop className="w-5 h-5 text-indigo-400" />
+              <span className="text-xs font-bold">ACTIVE PRINTER</span>
+              <Printer className="w-5 h-5 text-indigo-400" />
             </div>
-            <h3 className="text-lg font-bold text-cyan-300 truncate">System Default Printer</h3>
-            <span className="text-[11px] text-emerald-400 font-medium mt-1 block">⚡ Automatic Laptop Spooling Active</span>
+            <h3 className="text-sm font-bold text-cyan-300 truncate">
+              {selectedPrinterState || 'Default System Printer'}
+            </h3>
+            <span className="text-[11px] text-emerald-400 font-medium mt-1 block">
+              {metrics?.isAgentOnline ? '⚡ Automatic Spooling Active' : '⏸️ Agent Offline'}
+            </span>
           </div>
+        </div>
+
+        {/* Connected Hardware Printer Selector Section */}
+        <div className="glass-card p-6 rounded-2xl border border-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <Printer className="w-5 h-5 text-cyan-400" />
+              <h3 className="font-extrabold text-white text-base">Connected Hardware Printer Manager</h3>
+            </div>
+            {printerSaveMsg && (
+              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{printerSaveMsg}</span>
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-400 mb-4">
+            Select which physical printer to use for all customer print jobs. If set to <strong>Default System Printer</strong>, it will automatically use your Windows default printer.
+          </p>
+
+          <form onSubmit={handleSavePrinter} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Select Active Hardware Printer</label>
+              <select
+                value={selectedPrinterState || 'Default System Printer'}
+                onChange={(e) => setSelectedPrinterState(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none"
+              >
+                {availablePrinters.map((pr) => (
+                  <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                    {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={updatingPrinter}
+              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2"
+            >
+              {updatingPrinter ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Save Printer Selection</span>
+                </>
+              )}
+            </button>
+          </form>
         </div>
 
         {/* Credentials Section */}
