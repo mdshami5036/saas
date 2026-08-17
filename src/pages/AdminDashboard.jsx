@@ -94,11 +94,11 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin Email</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin ID / Mobile Number</label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  placeholder="admin@example.com"
+                  placeholder="e.g. 7762839216"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
