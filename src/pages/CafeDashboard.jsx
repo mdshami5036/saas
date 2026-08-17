@@ -70,7 +70,9 @@ export default function CafeDashboard() {
   const [copiedKey, setCopiedKey] = useState('');
   const [showQrModal, setShowQrModal] = useState(false);
 
-  // Pricing update state
+  // Pricing & Profile update state
+  const [shopNameInput, setShopNameInput] = useState('');
+  const [isEditingShopName, setIsEditingShopName] = useState(false);
   const [bwPrice, setBwPrice] = useState('2.0');
   const [colorPrice, setColorPrice] = useState('10.0');
   const [updatingPricing, setUpdatingPricing] = useState(false);
@@ -102,6 +104,9 @@ export default function CafeDashboard() {
         cafeData.websiteUrl = `${getOriginUrl()}/cafe/${cafeData.slug}`;
         cafeData.backendApiUrl = getApiUrl();
         setData(res.data);
+        if (!isEditingShopName && res.data.cafe.name) {
+          setShopNameInput(res.data.cafe.name);
+        }
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
         if (!rzpKeyId && res.data.cafe.razorpayKeyId) {
@@ -138,16 +143,18 @@ export default function CafeDashboard() {
   };
 
   const handleUpdatePricing = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setUpdatingPricing(true);
     setSaveSuccessMsg('');
 
     const newBw = parseFloat(bwPrice) || 2.0;
     const newColor = parseFloat(colorPrice) || 10.0;
+    const newName = shopNameInput.trim() || data?.cafe?.name;
 
     if (data && data.cafe) {
       const updatedCafe = {
         ...data.cafe,
+        name: newName,
         bwPricePerPage: newBw,
         colorPricePerPage: newColor,
       };
@@ -159,12 +166,17 @@ export default function CafeDashboard() {
     }
 
     try {
-      await api.put('/cafe/pricing', { bwPricePerPage: newBw, colorPricePerPage: newColor });
+      await api.put('/cafe/pricing', {
+        name: newName,
+        bwPricePerPage: newBw,
+        colorPricePerPage: newColor,
+      });
+      setIsEditingShopName(false);
     } catch (err) {
-      console.warn('API sync warning, pricing saved locally:', err.message);
+      console.warn('API sync warning, profile saved locally:', err.message);
     } finally {
       setUpdatingPricing(false);
-      setSaveSuccessMsg('Prices updated successfully!');
+      setSaveSuccessMsg('Shop Name & Rates updated successfully!');
       setTimeout(() => setSaveSuccessMsg(''), 3000);
     }
   };
@@ -334,8 +346,46 @@ export default function CafeDashboard() {
         {/* Top Banner & Quick Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl border border-slate-800">
           <div>
-            <div className="flex items-center space-x-3 mb-1">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{cafe?.name}</h1>
+            <div className="flex items-center space-x-3 mb-1 flex-wrap gap-y-2">
+              {isEditingShopName ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={shopNameInput}
+                    onChange={(e) => setShopNameInput(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-cyan-500 text-white font-extrabold text-lg focus:outline-none"
+                    placeholder="Enter Cyber Cafe Name"
+                  />
+                  <button
+                    onClick={handleUpdatePricing}
+                    disabled={updatingPricing}
+                    className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShopNameInput(cafe?.name || '');
+                      setIsEditingShopName(false);
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{cafe?.name}</h1>
+                  <button
+                    onClick={() => setIsEditingShopName(true)}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-cyan-300 hover:text-cyan-200 text-xs font-bold border border-slate-700 transition-colors flex items-center space-x-1"
+                    title="Edit Cyber Cafe / Shop Name"
+                  >
+                    <span>✏️ Edit Name</span>
+                  </button>
+                </>
+              )}
+
               <span
                 className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                   metrics?.isAgentOnline
@@ -623,12 +673,12 @@ export default function CafeDashboard() {
           </form>
         </div>
 
-        {/* Pricing Configuration Form */}
+        {/* Profile & Pricing Configuration Form */}
         <div className="glass-card p-6 rounded-2xl border border-slate-800">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
             <div className="flex items-center space-x-2">
               <Settings className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-extrabold text-white text-base">Print Pricing Settings</h3>
+              <h3 className="font-extrabold text-white text-base">Cyber Cafe Profile & Pricing Settings</h3>
             </div>
             {saveSuccessMsg && (
               <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
@@ -638,7 +688,18 @@ export default function CafeDashboard() {
             )}
           </div>
 
-          <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Cyber Cafe / Shop Name</label>
+              <input
+                type="text"
+                required
+                placeholder="Shop Name"
+                value={shopNameInput}
+                onChange={(e) => setShopNameInput(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Black &amp; White Rate (₹/page)</label>
               <input
@@ -664,9 +725,16 @@ export default function CafeDashboard() {
             <button
               type="submit"
               disabled={updatingPricing}
-              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95"
+              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-1.5"
             >
-              {updatingPricing ? 'Saving...' : 'Save New Rates'}
+              {updatingPricing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Save Profile & Rates</span>
+                </>
+              )}
             </button>
           </form>
         </div>
