@@ -5,7 +5,9 @@ export default function SeoHead({
   description = 'wevePrint makes online document printing simple and convenient. Upload your documents, choose your printing requirements, and place your print order easily from mobile or desktop.',
   canonicalUrl = 'https://weveprint.netlify.app/',
   ogImage = 'https://weveprint.netlify.app/favicon.png',
-  ogType = 'website'
+  ogType = 'website',
+  noindex = false,
+  jsonLd = null,
 }) {
   useEffect(() => {
     // Update Document Title
@@ -24,6 +26,12 @@ export default function SeoHead({
 
     // Update Description
     updateMeta('name', 'description', description);
+
+    // Update Robots Meta Tag
+    const robotsContent = noindex
+      ? 'noindex, nofollow, noarchive'
+      : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+    updateMeta('name', 'robots', robotsContent);
 
     // Update Open Graph Tags
     updateMeta('property', 'og:title', title);
@@ -47,7 +55,21 @@ export default function SeoHead({
       document.head.appendChild(linkCanonical);
     }
     linkCanonical.setAttribute('href', canonicalUrl);
-  }, [title, description, canonicalUrl, ogImage, ogType]);
+
+    // Optional dynamic JSON-LD injection
+    let jsonLdScript = document.getElementById('dynamic-jsonld');
+    if (jsonLd) {
+      if (!jsonLdScript) {
+        jsonLdScript = document.createElement('script');
+        jsonLdScript.id = 'dynamic-jsonld';
+        jsonLdScript.type = 'application/ld+json';
+        document.head.appendChild(jsonLdScript);
+      }
+      jsonLdScript.textContent = JSON.stringify(jsonLd);
+    } else if (jsonLdScript) {
+      jsonLdScript.remove();
+    }
+  }, [title, description, canonicalUrl, ogImage, ogType, noindex, jsonLd]);
 
   return null;
 }

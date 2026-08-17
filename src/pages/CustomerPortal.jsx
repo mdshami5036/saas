@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import SeoHead from '../components/SeoHead';
 import PdfPreviewer from '../components/PdfPreviewer';
 import PrintStatusTracker from '../components/PrintStatusTracker';
 import UploadPageAd from '../components/UploadPageAd';
@@ -317,6 +318,11 @@ export default function CustomerPortal() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-between font-sans text-slate-100 pb-24 lg:pb-8 relative overflow-hidden">
+      <SeoHead
+        title={`Instant PDF Upload & Print – ${safeCafeInfo.name}`}
+        description={`Upload documents and auto-print instantly at ${safeCafeInfo.name}.`}
+        noindex={true}
+      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-cyan-600/20 to-transparent" />

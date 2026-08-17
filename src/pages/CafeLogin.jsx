@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import SeoHead from '../components/SeoHead';
 import { Printer, Lock, Mail, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 
 export default function CafeLogin() {
@@ -43,6 +44,7 @@ export default function CafeLogin() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
+      <SeoHead title="Cyber Cafe Owner Login – WevePrint" noindex={true} />
       <Navbar />
 
       <main className="flex-1 flex items-center justify-center p-4">

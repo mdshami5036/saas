@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /cafe/
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /login
