@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import {
   Printer,
