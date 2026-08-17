@@ -4,6 +4,7 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import PdfPreviewer from '../components/PdfPreviewer';
 import PrintStatusTracker from '../components/PrintStatusTracker';
+import UploadPageAd from '../components/UploadPageAd';
 import {
   UploadCloud,
   FileText,
@@ -535,6 +536,11 @@ export default function CustomerPortal() {
           </div>
         )}
       </main>
+
+      {/* Responsive Google AdSense Banner (Only visible before PDF upload) */}
+      {!uploadedFile && !selectedFile && !activeJobId && (
+        <UploadPageAd />
+      )}
 
       {/* Sticky Bottom Action Bar for Mobile Phones */}
       {uploadedFile && (
