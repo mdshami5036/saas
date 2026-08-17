@@ -1,10 +1,16 @@
 import React from 'react';
+import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import { Scale, CheckCircle2, AlertTriangle, FileCheck, Mail } from 'lucide-react';
 
 export default function TermsConditions() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden">
+      <SeoHead
+        title="Terms & Conditions – wevePrint Online Printing"
+        description="Review the Terms & Conditions governing the use of wevePrint online printing service platform."
+        canonicalUrl="https://weveprint.netlify.app/terms-conditions"
+      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-indigo-600/20 to-transparent" />

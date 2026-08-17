@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import { Mail, Phone, MapPin, Send, CheckCircle2, UserCheck, Code2, Loader2 } from 'lucide-react';
 
@@ -47,6 +48,11 @@ export default function ContactUs() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden">
+      <SeoHead
+        title="Contact wevePrint – Online Printing Service Support"
+        description="Have questions or need assistance with online document printing? Contact the wevePrint support team today."
+        canonicalUrl="https://weveprint.netlify.app/contact"
+      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-cyan-600/20 to-transparent" />

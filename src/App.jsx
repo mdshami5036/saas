@@ -12,6 +12,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Disclaimer from './pages/Disclaimer';
 
+import NotFound from './pages/NotFound';
+
 export default function App() {
   return (
     <Routes>
@@ -26,7 +28,7 @@ export default function App() {
       <Route path="/register" element={<CafeRegister />} />
       <Route path="/dashboard" element={<CafeDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

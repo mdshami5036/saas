@@ -1,0 +1,15 @@
+{
+  "short_name": "wevePrint",
+  "name": "wevePrint – Online Printing & Document Print Service",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#040914",
+  "theme_color": "#040914",
+  "display": "standalone"
+}

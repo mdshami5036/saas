@@ -1,11 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import { Printer, ShieldCheck, Zap, UserCheck, Code2, Mail, Award, Users } from 'lucide-react';
 
 export default function AboutUs() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden">
+      <SeoHead
+        title="About wevePrint – Online Printing Service"
+        description="Learn about wevePrint, an innovative online document printing platform making printing easy, convenient, and fast from mobile or desktop."
+        canonicalUrl="https://weveprint.netlify.app/about"
+      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-blue-600/20 to-transparent" />
