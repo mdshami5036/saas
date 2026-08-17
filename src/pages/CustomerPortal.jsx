@@ -316,7 +316,7 @@ export default function CustomerPortal() {
   const calculatedTotal = getCalculatedPrice();
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100 pb-24 lg:pb-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-between font-sans text-slate-100 pb-24 lg:pb-8 relative overflow-hidden">
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-cyan-600/20 to-transparent" />

@@ -15,7 +15,7 @@ export default function UploadPageAd() {
   }, []);
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-6 px-4 flex flex-col items-center justify-center overflow-hidden">
+    <div className="mt-auto w-full max-w-4xl mx-auto pt-8 pb-6 px-4 flex flex-col items-center justify-center relative z-10 overflow-hidden">
       <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 font-semibold">
         Advertisement
       </div>
