@@ -15,6 +15,7 @@ import Disclaimer from './pages/Disclaimer';
 // PDF Tools Pages
 import PdfToolsHub from './pages/PdfToolsHub';
 import MergePdfTool from './pages/tools/MergePdfTool';
+import SplitPdfTool from './pages/tools/SplitPdfTool';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
 
 // Documentation Guides Pages
@@ -35,9 +36,7 @@ export default function App() {
       {/* PDF Tools Hub & Individual Tools */}
       <Route path="/tools" element={<PdfToolsHub />} />
       <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
-      
-      {/* Additional 17 PDF Tools */}
-      <Route path="/tools/split-pdf" element={<GenericPdfTool toolTitle="Split PDF" toolDescription="Separate one page or a whole set for easy conversion into independent PDF files." actionButtonText="Split PDF" />} />
+      <Route path="/tools/split-pdf" element={<SplitPdfTool />} />
       <Route path="/tools/remove-pages" element={<GenericPdfTool toolTitle="Remove Pages" toolDescription="Delete unwanted pages from your PDF document." actionButtonText="Remove Pages" />} />
       <Route path="/tools/extract-pages" element={<GenericPdfTool toolTitle="Extract Pages" toolDescription="Extract specific pages from your PDF document." actionButtonText="Extract Pages" />} />
       <Route path="/tools/organize-pdf" element={<GenericPdfTool toolTitle="Organize PDF" toolDescription="Sort, re-order, rotate or delete pages inside your PDF document." actionButtonText="Organize PDF" />} />
