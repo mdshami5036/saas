@@ -15,24 +15,24 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
 
   const navLinks = [
     { label: 'Home', path: '/' },
+    { label: 'How QR Print Works', path: '/docs/how-qr-printing-works' },
+    { label: 'Printer Setup', path: '/docs/setup-printer-auto-print' },
+    { label: 'Direct Payouts', path: '/docs/razorpay-direct-payouts' },
     { label: 'About Us', path: '/about' },
-    { label: 'Contact Us', path: '/contact' },
-    { label: 'Privacy Policy', path: '/privacy-policy' },
-    { label: 'Terms', path: '/terms-conditions' },
-    { label: 'Disclaimer', path: '/disclaimer' },
+    { label: 'Contact', path: '/contact' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-card border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full glass-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center space-x-3 group shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-105 transition-transform duration-300">
             <Printer className="w-6 h-6 text-white" />
           </div>
           <div>
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent">
               WevePrint
             </span>
           </div>
@@ -47,10 +47,10 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`transition-colors py-1 ${
+                  className={`transition-all duration-200 py-1.5 px-2 rounded-lg ${
                     isActive
-                      ? 'text-cyan-400 font-extrabold border-b-2 border-cyan-400'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'text-cyan-400 font-extrabold bg-cyan-950/60 border border-cyan-800/80 shadow-sm shadow-cyan-500/10'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/60'
                   }`}
                 >
                   {item.label}
