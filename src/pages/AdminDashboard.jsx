@@ -11,9 +11,11 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Login form state
-  const [email, setEmail] = useState('admin@autoprint.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('7762839216');
+  const [password, setPassword] = useState('Mdshami@5036');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   const fetchAdminData = async () => {
     try {
@@ -41,14 +43,21 @@ export default function AdminDashboard() {
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setLoginError('');
+
     try {
       const res = await api.post('/admin/login', { email, password });
       if (res.data.success) {
         localStorage.setItem('admin_token', res.data.token);
         fetchAdminData();
+      } else {
+        setLoginError(res.data.error || 'Invalid Admin ID or Password');
       }
     } catch (err) {
-      alert('Admin Login failed: ' + (err.response?.data?.error || err.message));
+      setLoginError(err.response?.data?.error || err.message || 'Login failed. Please check credentials.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -69,41 +78,57 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-slate-950 flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-800 shadow-2xl">
-            <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-3 border border-amber-500/20">
-                <ShieldCheck className="w-6 h-6" />
+          <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-slate-800 shadow-2xl space-y-6">
+            <div className="text-center">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-3 border border-amber-500/20 shadow-lg shadow-amber-500/10">
+                <ShieldCheck className="w-7 h-7" />
               </div>
               <h2 className="text-2xl font-extrabold text-white">Super Admin Portal</h2>
-              <p className="text-xs text-slate-400 mt-1">Platform management & Cyber Cafe controls</p>
+              <p className="text-xs text-slate-400 mt-1">Platform management &amp; Cyber Cafe controls</p>
             </div>
+
+            {loginError && (
+              <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-bold text-center">
+                ⚠️ {loginError}
+              </div>
+            )}
 
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin Email</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Admin ID / Phone / Email</label>
                 <input
-                  type="email"
+                  type="text"
                   required
+                  placeholder="e.g. 7762839216"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-amber-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin Password</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Admin Password</label>
                 <input
                   type="password"
                   required
+                  placeholder="Enter admin password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-amber-500 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-lg shadow-amber-500/25 transition-all"
+                disabled={isSubmitting}
+                className="w-full py-3.5 rounded-xl font-extrabold text-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-lg shadow-amber-500/25 transition-all active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                Sign In as Super Admin
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Verifying Admin Credentials...</span>
+                  </>
+                ) : (
+                  <span>Sign In as Super Admin</span>
+                )}
               </button>
             </form>
           </div>
