@@ -578,15 +578,17 @@ export default function LandingPage() {
 
             {/* Col 2: Quick Links */}
             <div>
-              <h4 style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Pages & Legal</h4>
+              <h4 style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>Pages, Guides & Legal</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: '#94a3b8' }}>
+                <li><Link to="/tools" style={{ color: '#38bdf8', fontWeight: 700, textDecoration: 'none' }}>⚡ Free PDF Tools</Link></li>
+                <li><Link to="/docs/how-qr-printing-works" style={{ color: 'inherit', textDecoration: 'none' }}>How QR Printing Works</Link></li>
+                <li><Link to="/docs/setup-printer-auto-print" style={{ color: 'inherit', textDecoration: 'none' }}>Printer Setup Guide</Link></li>
+                <li><Link to="/docs/razorpay-direct-payouts" style={{ color: 'inherit', textDecoration: 'none' }}>Razorpay Direct Payouts</Link></li>
                 <li><Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>About Us</Link></li>
                 <li><Link to="/contact" style={{ color: 'inherit', textDecoration: 'none' }}>Contact Us</Link></li>
                 <li><Link to="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link></li>
                 <li><Link to="/terms-conditions" style={{ color: 'inherit', textDecoration: 'none' }}>Terms & Conditions</Link></li>
                 <li><Link to="/disclaimer" style={{ color: 'inherit', textDecoration: 'none' }}>Disclaimer</Link></li>
-                <li><Link to="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Cafe Login</Link></li>
-                <li><Link to="/register" style={{ color: 'inherit', textDecoration: 'none' }}>Register New Shop</Link></li>
               </ul>
             </div>
 

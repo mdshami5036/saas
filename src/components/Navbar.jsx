@@ -15,9 +15,7 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
 
   const navLinks = [
     { label: 'Home', path: '/' },
-    { label: 'How QR Print Works', path: '/docs/how-qr-printing-works' },
-    { label: 'Printer Setup', path: '/docs/setup-printer-auto-print' },
-    { label: 'Direct Payouts', path: '/docs/razorpay-direct-payouts' },
+    { label: 'PDF Tools', path: '/tools' },
     { label: 'About Us', path: '/about' },
     { label: 'Contact', path: '/contact' },
   ];

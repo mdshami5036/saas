@@ -12,6 +12,15 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Disclaimer from './pages/Disclaimer';
 
+// PDF Tools Pages
+import PdfToolsHub from './pages/PdfToolsHub';
+import MergePdfTool from './pages/tools/MergePdfTool';
+
+// Documentation Guides Pages
+import HowQrPrintingWorks from './pages/docs/HowQrPrintingWorks';
+import SetupPrinterAutoPrint from './pages/docs/SetupPrinterAutoPrint';
+import RazorpayDirectPayouts from './pages/docs/RazorpayDirectPayouts';
+
 export default function App() {
   return (
     <Routes>
@@ -21,6 +30,16 @@ export default function App() {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-conditions" element={<TermsConditions />} />
       <Route path="/disclaimer" element={<Disclaimer />} />
+
+      {/* PDF Tools Hub & Merge PDF Tool */}
+      <Route path="/tools" element={<PdfToolsHub />} />
+      <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
+
+      {/* Documentation Guides */}
+      <Route path="/docs/how-qr-printing-works" element={<HowQrPrintingWorks />} />
+      <Route path="/docs/setup-printer-auto-print" element={<SetupPrinterAutoPrint />} />
+      <Route path="/docs/razorpay-direct-payouts" element={<RazorpayDirectPayouts />} />
+
       <Route path="/cafe/:slug" element={<CustomerPortal />} />
       <Route path="/login" element={<CafeLogin />} />
       <Route path="/register" element={<CafeRegister />} />
