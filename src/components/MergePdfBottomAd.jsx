@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function MergePdfBottomAd() {
+  const [adKey, setAdKey] = useState(0);
+
   useEffect(() => {
+    // Initial AdSense push
     try {
       if (window.adsbygoogle) {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -9,11 +12,31 @@ export default function MergePdfBottomAd() {
     } catch (e) {
       console.warn('AdSense push error (bottom banner):', e);
     }
+
+    // Auto-refresh ad every 5 seconds (5000 ms)
+    const interval = setInterval(() => {
+      setAdKey((prev) => prev + 1);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (adKey > 0) {
+      try {
+        if (window.adsbygoogle) {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        }
+      } catch (e) {
+        console.warn('AdSense refresh push error (bottom banner):', e);
+      }
+    }
+  }, [adKey]);
 
   return (
     <div className="w-full max-w-4xl mx-auto my-6 flex justify-center overflow-hidden">
       <ins
+        key={adKey}
         className="adsbygoogle"
         style={{ display: 'block', width: '100%', minHeight: '90px' }}
         data-ad-client="ca-pub-8836038922705746"
