@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
-import MergePdfBottomAd from '../../components/MergePdfBottomAd';
-import MergePdfTopAd from '../../components/MergePdfTopAd';
+import AllToolsTopAd from '../../components/AllToolsTopAd';
+import AllToolsBottomAd from '../../components/AllToolsBottomAd';
 import {
   FileText,
   UploadCloud,
@@ -161,14 +161,14 @@ export default function GenericPdfTool({
               </div>
             )}
 
-            <MergePdfBottomAd />
+            <AllToolsBottomAd />
           </div>
         )}
 
         {/* STATE 2: WORKSPACE SCREEN */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            <MergePdfTopAd />
+            <AllToolsTopAd />
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
               <div className="lg:col-span-3 glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6">
