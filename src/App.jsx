@@ -16,6 +16,7 @@ import Disclaimer from './pages/Disclaimer';
 import PdfToolsHub from './pages/PdfToolsHub';
 import MergePdfTool from './pages/tools/MergePdfTool';
 import SplitPdfTool from './pages/tools/SplitPdfTool';
+import RemovePagesTool from './pages/tools/RemovePagesTool';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
 
 // Documentation Guides Pages
@@ -37,7 +38,7 @@ export default function App() {
       <Route path="/tools" element={<PdfToolsHub />} />
       <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
       <Route path="/tools/split-pdf" element={<SplitPdfTool />} />
-      <Route path="/tools/remove-pages" element={<GenericPdfTool toolTitle="Remove Pages" toolDescription="Delete unwanted pages from your PDF document." actionButtonText="Remove Pages" />} />
+      <Route path="/tools/remove-pages" element={<RemovePagesTool />} />
       <Route path="/tools/extract-pages" element={<GenericPdfTool toolTitle="Extract Pages" toolDescription="Extract specific pages from your PDF document." actionButtonText="Extract Pages" />} />
       <Route path="/tools/organize-pdf" element={<GenericPdfTool toolTitle="Organize PDF" toolDescription="Sort, re-order, rotate or delete pages inside your PDF document." actionButtonText="Organize PDF" />} />
       <Route path="/tools/scan-to-pdf" element={<GenericPdfTool toolTitle="Scan to PDF" toolDescription="Capture document scans using mobile camera or images into PDF." actionButtonText="Scan to PDF" acceptFileType="image/*" />} />
