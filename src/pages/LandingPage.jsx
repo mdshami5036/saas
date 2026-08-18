@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import {
   Printer,
@@ -65,11 +64,6 @@ export default function LandingPage() {
       fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
       overflowX: 'hidden',
     }}>
-      <SeoHead
-        title="wevePrint – Online Printing & Document Print Service"
-        description="wevePrint makes online document printing simple and convenient. Upload your documents, choose your printing requirements, and place your print order easily from mobile or desktop."
-        canonicalUrl="https://weveprint.netlify.app/"
-      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap');
 
@@ -128,6 +122,7 @@ export default function LandingPage() {
          1. UNIFIED TOP NAVBAR
       ════════════════════════════════════════════════════════════════ */}
       <Navbar />
+
       {/* ════════════════════════════════════════════════════════════════
          2. HERO SECTION
       ════════════════════════════════════════════════════════════════ */}
@@ -143,7 +138,7 @@ export default function LandingPage() {
           }}>
             <Sparkles size={16} color="#38bdf8" />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#38bdf8', letterSpacing: '0.04em' }}>
-              Instant Cloud Printing & Online Document Print Service
+              The Future of Instant Self-Service Cloud Printing
             </span>
           </div>
 

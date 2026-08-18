@@ -10,11 +10,10 @@ export default function AdminDashboard() {
   const [cafes, setCafes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Login form state — empty by default for security
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Login form state
+  const [email, setEmail] = useState('admin@autoprint.com');
+  const [password, setPassword] = useState('admin123');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginError, setLoginError] = useState('');
 
   const fetchAdminData = async () => {
     try {
@@ -42,21 +41,14 @@ export default function AdminDashboard() {
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
-    setLoginError('');
     try {
-      const res = await api.post('/admin/login', {
-        email: email.trim(),
-        password,
-      });
-      if (res.data && res.data.success && res.data.token) {
+      const res = await api.post('/admin/login', { email, password });
+      if (res.data.success) {
         localStorage.setItem('admin_token', res.data.token);
         fetchAdminData();
-      } else {
-        setLoginError(res.data?.error || 'Invalid admin credentials');
       }
     } catch (err) {
-      console.error('Admin login error:', err);
-      setLoginError(err.response?.data?.error || 'Invalid admin credentials. Please check your email and password.');
+      alert('Admin Login failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -86,19 +78,12 @@ export default function AdminDashboard() {
               <p className="text-xs text-slate-400 mt-1">Platform management & Cyber Cafe controls</p>
             </div>
 
-            {loginError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center space-x-2">
-                <span>⚠️ {loginError}</span>
-              </div>
-            )}
-
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin ID / Mobile Number</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Admin Email</label>
                 <input
-                  type="text"
+                  type="email"
                   required
-                  placeholder="e.g. 7762839216"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
@@ -109,7 +94,6 @@ export default function AdminDashboard() {
                 <input
                   type="password"
                   required
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"

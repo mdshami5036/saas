@@ -1,16 +1,10 @@
 import React from 'react';
-import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import { ShieldCheck, Lock, FileText, Trash2, Mail } from 'lucide-react';
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden">
-      <SeoHead
-        title="Privacy Policy – wevePrint Online Printing"
-        description="Read the official Privacy Policy of wevePrint to understand how document uploads, customer privacy, and data security are protected."
-        canonicalUrl="https://weveprint.netlify.app/privacy-policy"
-      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-emerald-600/20 to-transparent" />

@@ -1,16 +1,10 @@
 import React from 'react';
-import SeoHead from '../components/SeoHead';
 import Navbar from '../components/Navbar';
 import { AlertCircle, FileText, ShieldAlert, Mail } from 'lucide-react';
 
 export default function Disclaimer() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative overflow-hidden">
-      <SeoHead
-        title="Disclaimer – wevePrint Online Printing Service"
-        description="Read the official Disclaimer for wevePrint online document printing platform."
-        canonicalUrl="https://weveprint.netlify.app/disclaimer"
-      />
       {/* Background Ambient Glow Orbs */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="anim-glow-orb absolute -top-20 left-1/4 w-[500px] h-[500px] rounded-full bg-gradient-radial from-amber-600/20 to-transparent" />
