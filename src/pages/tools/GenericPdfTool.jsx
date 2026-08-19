@@ -35,6 +35,7 @@ export default function GenericPdfTool({
   iconColor = 'text-cyan-400',
 }) {
   const fileInputRef = useRef(null);
+  const addMoreInputRef = useRef(null);
 
   // View state: 'SELECT' | 'WORKSPACE' | 'PROCESSING' | 'SUCCESS'
   const [viewState, setViewState] = useState('SELECT');
@@ -111,6 +112,23 @@ export default function GenericPdfTool({
       setFiles(fileList);
       loadPreviews(fileList);
       setViewState('WORKSPACE');
+    }
+  };
+
+  // Add More Images / Files handler
+  const handleAddMoreFiles = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length > 0) {
+      const newItems = selectedFiles.map((file, idx) => ({
+        id: `${file.name}-${Date.now()}-${idx}-${Math.random()}`,
+        file,
+        name: file.name,
+        size: (file.size / (1024 * 1024)).toFixed(2),
+      }));
+
+      const updated = [...files, ...newItems];
+      setFiles(updated);
+      loadPreviews(updated);
     }
   };
 
@@ -294,7 +312,7 @@ export default function GenericPdfTool({
                   ref={fileInputRef}
                   type="file"
                   accept={acceptFileType}
-                  multiple={acceptFileType.includes('image')}
+                  multiple={true}
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -321,19 +339,37 @@ export default function GenericPdfTool({
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
                   <div className="space-y-1">
                     <h3 className="text-base font-extrabold text-white flex items-center space-x-2">
-                      <span className="truncate max-w-xs sm:max-w-md">{files[0]?.name}</span>
+                      <span className="truncate max-w-xs sm:max-w-md">
+                        {files.length > 1 ? `${files.length} Files Loaded (${files[0]?.name} + ${files.length - 1} more)` : files[0]?.name}
+                      </span>
                       <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-mono font-bold">
                         {totalPageCount} {totalPageCount === 1 ? 'Page' : 'Pages Total'}
                       </span>
                     </h3>
-                    <p className="text-xs text-slate-400">File Size: {files[0]?.size} MB</p>
+                    <p className="text-xs text-slate-400">Total File Size: {files.reduce((sum, f) => sum + parseFloat(f.size || 0), 0).toFixed(2)} MB</p>
                   </div>
-                  <button
-                    onClick={resetTool}
-                    className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-rose-400 hover:text-rose-300 font-bold hover:bg-slate-800 transition-colors"
-                  >
-                    Change Document
-                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-cyan-400 hover:text-cyan-300 font-bold hover:bg-slate-800 cursor-pointer flex items-center space-x-1.5 transition-colors">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add More Images / Files</span>
+                      <input
+                        ref={addMoreInputRef}
+                        type="file"
+                        accept={acceptFileType}
+                        multiple
+                        onChange={handleAddMoreFiles}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <button
+                      onClick={resetTool}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-rose-400 hover:text-rose-300 font-bold hover:bg-slate-800 transition-colors"
+                    >
+                      Reset
+                    </button>
+                  </div>
                 </div>
 
                 {isLoadingPreviews ? (
