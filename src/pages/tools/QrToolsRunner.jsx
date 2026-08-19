@@ -460,58 +460,39 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
             )}
 
             {/* QR Code Color & Logo Customization Controls */}
-            {!['qr-scanner', 'qr-decoder'].includes(toolId) && (
-              <div className="pt-4 border-t border-slate-800 space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Custom Colors &amp; Logo Overlay</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">QR Code Color:</label>
-                    <input
-                      type="color"
-                      value={fgColor}
-                      onChange={(e) => setFgColor(e.target.value)}
-                      className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-300 block mb-1">Background Color:</label>
-                    <input
-                      type="color"
-                      value={bgColor}
-                      onChange={(e) => setBgColor(e.target.value)}
-                      className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
+            <div className="pt-4 border-t border-slate-800 space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Custom Colors &amp; Logo Overlay</h4>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">Upload Central Logo (Optional):</label>
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">QR Code Color:</label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700"
+                    type="color"
+                    value={fgColor}
+                    onChange={(e) => setFgColor(e.target.value)}
+                    className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">Background Color:</label>
+                  <input
+                    type="color"
+                    value={bgColor}
+                    onChange={(e) => setBgColor(e.target.value)}
+                    className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
                   />
                 </div>
               </div>
-            )}
 
-            {/* 6. Scanner & Decoder */}
-            {['qr-scanner', 'qr-decoder'].includes(toolId) && (
-              <div className="space-y-4">
-                <label className="block border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center cursor-pointer hover:border-cyan-500 transition-colors bg-slate-900/40">
-                  <UploadCloud className="w-10 h-10 text-cyan-400 mx-auto mb-2" />
-                  <span className="text-xs font-bold text-white block">Upload QR Code Image to Scan</span>
-                  <span className="text-[10px] text-slate-400">100% Client-side local decoding</span>
-                  <input type="file" accept="image/*" onChange={handleDecodeImage} className="hidden" />
-                </label>
-                {scannedResult && (
-                  <div className="p-3.5 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs font-mono font-bold">
-                    {scannedResult}
-                  </div>
-                )}
+              <div>
+                <label className="text-[11px] font-bold text-slate-300 block mb-1">Upload Central Logo (Optional):</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700"
+                />
               </div>
-            )}
+            </div>
 
             {/* 7. Bulk QR Generator */}
             {toolId === 'bulk-qr-generator' && (

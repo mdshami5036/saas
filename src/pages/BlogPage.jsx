@@ -421,17 +421,6 @@ const ALL_51_TOOL_BLOGS = [
     content: `Upload your store icon or logo image and overlay it over the QR code center.`,
     link: '/tools/qr-with-logo',
   },
-  {
-    id: 'blog-custom-qr-code',
-    title: 'How to Customize QR Code Colors and Background Style',
-    category: 'QR Code Tools',
-    author: 'WevePrint QR Team',
-    date: '2026-08-19',
-    readTime: '4 min read',
-    excerpt: 'Design brand-matched QR codes with custom color pickers.',
-    content: `Pick custom foreground and background colors for your brand QR codes.`,
-    link: '/tools/custom-qr-code',
-  },
 
   // --- CALCULATOR TOOLS (11 Blogs) ---
   {
