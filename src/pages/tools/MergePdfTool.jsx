@@ -227,9 +227,7 @@ export default function MergePdfTool() {
         {/* ========================================================================= */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            {/* AD PLACEMENT 2: TOP Banner AdSense Unit (slot 1600975362) */}
-            <MergePdfTopAd />
-
+            
             {/* Main Grid: Left Workspace Cards + Right Sidebar Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
               
@@ -339,14 +337,19 @@ export default function MergePdfTool() {
 
                 {/* Submit Merge PDF Button matching Screenshot 2 & 3 */}
                 <button
-                  onClick={handleMergePdf}
+                  onClick={handleMergePdfs}
                   disabled={files.length < 2}
-                  className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white transition-all shadow-xl shadow-red-600/30 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white transition-all shadow-xl shadow-red-600/30 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  <span>Merge PDF</span>
+                  <span>Merge PDF Files</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-2 pt-4">
+              <MergePdfTopAd />
+              <MergePdfBottomAd />
             </div>
           </div>
         )}

@@ -22,6 +22,7 @@ import GenericPdfTool from './pages/tools/GenericPdfTool';
 import ImageToolsRunner from './pages/tools/ImageToolsRunner';
 import QrToolsRunner from './pages/tools/QrToolsRunner';
 import CalculatorToolsRunner from './pages/tools/CalculatorToolsRunner';
+import ParticleBackground from './components/ParticleBackground';
 
 // Documentation Guides Pages
 import HowQrPrintingWorks from './pages/docs/HowQrPrintingWorks';
@@ -30,7 +31,9 @@ import RazorpayDirectPayouts from './pages/docs/RazorpayDirectPayouts';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ParticleBackground />
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutUs />} />
       <Route path="/contact" element={<ContactUs />} />
@@ -122,5 +125,6 @@ export default function App() {
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
