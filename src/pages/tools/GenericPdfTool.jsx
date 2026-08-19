@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import AllToolsTopAd from '../../components/AllToolsTopAd';
@@ -17,6 +20,7 @@ import {
   Info,
   CheckCircle2,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 
 export default function GenericPdfTool({
@@ -31,9 +35,58 @@ export default function GenericPdfTool({
   // View state: 'SELECT' | 'WORKSPACE' | 'PROCESSING' | 'SUCCESS'
   const [viewState, setViewState] = useState('SELECT');
   const [files, setFiles] = useState([]);
+  const [pagePreviews, setPagePreviews] = useState([]);
+  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
   const [processedBlobUrl, setProcessedBlobUrl] = useState('');
   const [processedFileName, setProcessedFileName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Render HD thumbnails for uploaded file
+  const loadPreviews = async (selectedFiles) => {
+    setIsLoadingPreviews(true);
+    const previews = [];
+
+    for (const item of selectedFiles) {
+      const file = item.file;
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdfDoc = await loadingTask.promise;
+          const maxPages = Math.min(8, pdfDoc.numPages); // First 8 pages
+
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 0.6 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            previews.push({
+              fileName: file.name,
+              pageNumber: i,
+              totalPages: pdfDoc.numPages,
+              dataUrl: canvas.toDataURL('image/png'),
+            });
+          }
+        } catch (err) {
+          console.warn('PDF Preview Error:', err);
+        }
+      } else if (file.type.startsWith('image/')) {
+        previews.push({
+          fileName: file.name,
+          pageNumber: 1,
+          totalPages: 1,
+          dataUrl: URL.createObjectURL(file),
+        });
+      }
+    }
+
+    setPagePreviews(previews);
+    setIsLoadingPreviews(false);
+  };
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -46,6 +99,7 @@ export default function GenericPdfTool({
       }));
 
       setFiles(fileList);
+      loadPreviews(fileList);
       setViewState('WORKSPACE');
     }
   };
@@ -57,17 +111,39 @@ export default function GenericPdfTool({
     setErrorMsg('');
 
     try {
-      // Simulate/perform client-side PDF processing
       const firstFile = files[0].file;
       let outputBlob;
 
       if (firstFile.type === 'application/pdf' || firstFile.name.endsWith('.pdf')) {
         const fileBuffer = await firstFile.arrayBuffer();
         const pdf = await PDFDocument.load(fileBuffer);
-        const pdfBytes = await pdf.save();
+        const pdfBytes = await pdf.save({ useObjectStreams: true });
+        outputBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      } else if (firstFile.type.startsWith('image/')) {
+        // Image to PDF (Scan to PDF / JPG to PDF)
+        const newPdf = await PDFDocument.create();
+        for (const item of files) {
+          const imageBytes = await item.file.arrayBuffer();
+          let embeddedImage;
+          if (item.file.type === 'image/png') {
+            embeddedImage = await newPdf.embedPng(imageBytes);
+          } else {
+            embeddedImage = await newPdf.embedJpg(imageBytes);
+          }
+
+          const page = newPdf.addPage([embeddedImage.width, embeddedImage.height]);
+          page.drawImage(embeddedImage, {
+            x: 0,
+            y: 0,
+            width: embeddedImage.width,
+            height: embeddedImage.height,
+          });
+        }
+
+        const pdfBytes = await newPdf.save();
         outputBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       } else {
-        // Image or text to PDF creation
+        // Document fallback
         const newPdf = await PDFDocument.create();
         const page = newPdf.addPage();
         page.drawText(`Converted using WevePrint PDF Tools - ${files[0].name}`, {
@@ -104,6 +180,7 @@ export default function GenericPdfTool({
 
   const resetTool = () => {
     setFiles([]);
+    setPagePreviews([]);
     setViewState('SELECT');
     setProcessedBlobUrl('');
     setProcessedFileName('');
@@ -148,56 +225,78 @@ export default function GenericPdfTool({
                   ref={fileInputRef}
                   type="file"
                   accept={acceptFileType}
+                  multiple={acceptFileType.includes('image')}
                   onChange={handleFileSelect}
                   className="hidden"
                 />
               </label>
-              <p className="text-xs text-slate-400 font-medium">or drop files here</p>
+              <p className="text-xs text-slate-500 font-medium">or drop files here</p>
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-bold max-w-md">
+              <div className="p-4 rounded-xl bg-red-950/80 border border-red-800 text-red-300 text-xs font-bold max-w-md">
                 ⚠️ {errorMsg}
               </div>
             )}
-
-            <AllToolsBottomAd />
           </div>
         )}
 
-        {/* STATE 2: WORKSPACE SCREEN */}
+        {/* STATE 2: WORKSPACE SCREEN (Live HD Page Previews) */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+              
               <div className="lg:col-span-3 glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <span className="text-xs font-bold text-slate-400">
-                    Selected File ({files.length})
-                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-white">
+                      Selected Document ({files.length})
+                    </h3>
+                    <p className="text-xs text-slate-400">{files[0]?.name}</p>
+                  </div>
                   <button
                     onClick={resetTool}
                     className="text-xs text-rose-400 hover:underline font-bold"
                   >
-                    Change File
+                    Change Document
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {files.map((item) => (
-                    <div
-                      key={item.id}
-                      className="glass-card p-6 rounded-2xl border border-slate-800 text-center space-y-3"
-                    >
-                      <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-cyan-400">
-                        <FileText className="w-8 h-8" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-white truncate px-1">{item.name}</p>
-                        <p className="text-[10px] text-slate-400">{item.size} MB</p>
-                      </div>
+                {isLoadingPreviews ? (
+                  <div className="flex items-center justify-center space-x-2 text-cyan-400 font-bold text-xs py-8">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Rendering Real-Time Document Previews...</span>
+                  </div>
+                ) : pagePreviews.length > 0 ? (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                      Real-Time Page Previews
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {pagePreviews.map((preview, idx) => (
+                        <div
+                          key={idx}
+                          className="glass-card p-2 rounded-2xl border border-slate-800 text-center space-y-2"
+                        >
+                          <div className="h-44 w-full rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+                            <img
+                              src={preview.dataUrl}
+                              alt={`Page ${preview.pageNumber}`}
+                              className="h-full w-full object-contain p-1"
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono font-bold block">
+                            Page {preview.pageNumber} of {preview.totalPages}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-slate-500 text-xs font-bold">
+                    File selected: {files[0]?.name} ({files[0]?.size} MB)
+                  </div>
+                )}
               </div>
 
               {/* Right Action Sidebar */}
@@ -207,7 +306,7 @@ export default function GenericPdfTool({
                 <div className="p-4 rounded-xl bg-cyan-950/70 border border-cyan-800/80 text-cyan-200 text-xs flex items-start space-x-2.5">
                   <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                   <p className="leading-relaxed">
-                    Click the button below to process your file instantly.
+                    Click the button below to process your document instantly with high fidelity.
                   </p>
                 </div>
 
@@ -219,54 +318,61 @@ export default function GenericPdfTool({
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+
             </div>
 
-            <div className="space-y-2 pt-4">
+            {/* Bottom Ad in Workspace */}
+            <div className="pt-6">
               <AllToolsBottomAd />
             </div>
           </div>
         )}
 
-        {/* STATE 3: PROCESSING SCREEN */}
+        {/* STATE 3: PROCESSING */}
         {viewState === 'PROCESSING' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in fade-in duration-300">
-            <MergePdfTopAd />
-            <div className="space-y-4">
-              <Loader2 className="w-16 h-16 text-red-500 animate-spin mx-auto" />
-              <h2 className="text-2xl font-extrabold text-white tracking-tight">Processing File...</h2>
-              <p className="text-xs text-slate-400">Applying changes securely in browser...</p>
+          <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-6 text-center animate-in fade-in duration-300">
+            <Loader2 className="w-14 h-14 text-cyan-500 animate-spin" />
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold text-white">Processing your file...</h2>
+              <p className="text-xs text-slate-400">Optimizing and compiling output PDF</p>
             </div>
           </div>
         )}
 
-        {/* STATE 4: SUCCESS SCREEN */}
+        {/* STATE 4: SUCCESS & DOWNLOAD SCREEN */}
         {viewState === 'SUCCESS' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-8 animate-in zoom-in-95 duration-300">
-            <div className="space-y-3">
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                File Processed Successfully!
-              </h2>
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in duration-300">
+            <AllToolsTopAd />
+
+            <div className="w-16 h-16 rounded-full bg-emerald-950 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={resetTool}
-                className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
-                title="Start Over"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
+            <div className="space-y-2 max-w-md">
+              <h2 className="text-2xl sm:text-3xl font-black text-white">File Processed Successfully!</h2>
+              <p className="text-xs text-slate-400 font-mono truncate">{processedFileName}</p>
+            </div>
 
+            <div className="flex flex-col sm:flex-row items-center gap-3">
               <button
                 onClick={triggerDownload}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-lg sm:text-xl shadow-xl shadow-red-600/30 transition-all hover:scale-105 active:scale-95 flex items-center space-x-3"
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-lg shadow-xl shadow-emerald-500/30 flex items-center space-x-3 transition-all hover:scale-105 active:scale-95"
               >
-                <Download className="w-6 h-6" />
-                <span>Download Result File</span>
+                <Download className="w-5 h-5" />
+                <span>Download Processed PDF</span>
+              </button>
+
+              <button
+                onClick={resetTool}
+                className="px-6 py-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 font-bold text-sm hover:bg-slate-800"
+              >
+                Process Another File
               </button>
             </div>
 
-            <MergePdfBottomAd />
+            <div className="pt-6 w-full">
+              <AllToolsBottomAd />
+            </div>
           </div>
         )}
       </main>

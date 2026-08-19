@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import MergePdfBottomAd from '../../components/MergePdfBottomAd';
@@ -16,11 +19,9 @@ import {
   Loader2,
   Info,
   SortAsc,
-  FileArchive,
-  Scissors,
-  RotateCw,
-  Lock,
-  RefreshCw,
+  Layers,
+  GripVertical,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function MergePdfTool() {
@@ -35,26 +36,61 @@ export default function MergePdfTool() {
   const [mergedBlobUrl, setMergedBlobUrl] = useState('');
   const [mergedFileName, setMergedFileName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
 
-  // Handle Initial File Selection
-  const handleFileSelect = (e) => {
+  // Extract cover thumbnail & page count for a PDF file
+  const loadPdfMetadata = async (fileObj) => {
+    try {
+      const arrayBuffer = await fileObj.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdfDoc = await loadingTask.promise;
+      const numPages = pdfDoc.numPages;
+
+      // Render Page 1 Cover Thumbnail
+      const page = await pdfDoc.getPage(1);
+      const viewport = page.getViewport({ scale: 0.5 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const coverUrl = canvas.toDataURL('image/png');
+
+      return { numPages, coverUrl };
+    } catch (err) {
+      console.warn('Failed to render PDF thumbnail:', err);
+      return { numPages: 1, coverUrl: '' };
+    }
+  };
+
+  // Handle Initial & Add More File Selection
+  const handleFileSelect = async (e) => {
     const selectedFiles = Array.from(e.target.files || []);
     const pdfFiles = selectedFiles.filter(
       (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
     );
 
     if (pdfFiles.length < selectedFiles.length) {
-      setErrorMsg('Some files were skipped because they are not valid PDF documents.');
+      setErrorMsg('Some non-PDF files were skipped.');
       setTimeout(() => setErrorMsg(''), 4000);
     }
 
     if (pdfFiles.length > 0) {
-      const newFileList = pdfFiles.map((file, idx) => ({
-        id: `${file.name}-${Date.now()}-${idx}`,
-        file,
-        name: file.name,
-        size: (file.size / (1024 * 1024)).toFixed(2),
-      }));
+      setIsLoadingPreviews(true);
+      const newFileList = [];
+
+      for (let idx = 0; idx < pdfFiles.length; idx++) {
+        const file = pdfFiles[idx];
+        const meta = await loadPdfMetadata(file);
+        newFileList.push({
+          id: `${file.name}-${Date.now()}-${idx}-${Math.random()}`,
+          file,
+          name: file.name,
+          size: (file.size / (1024 * 1024)).toFixed(2),
+          numPages: meta.numPages,
+          coverUrl: meta.coverUrl,
+        });
+      }
 
       setFiles((prev) => {
         const combined = [...prev, ...newFileList];
@@ -63,6 +99,7 @@ export default function MergePdfTool() {
         }
         return combined;
       });
+      setIsLoadingPreviews(false);
     }
   };
 
@@ -105,6 +142,17 @@ export default function MergePdfTool() {
     setFiles(sorted);
   };
 
+  // Move single item left / right
+  const moveItem = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= files.length) return;
+    const updated = [...files];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    setFiles(updated);
+  };
+
   // Remove single file
   const removeFile = (id) => {
     const updated = files.filter((item) => item.id !== id);
@@ -117,7 +165,7 @@ export default function MergePdfTool() {
   // Execute Merge PDF Operation
   const handleMergePdf = async () => {
     if (files.length < 2) {
-      setErrorMsg('Please select at least 2 PDF files to merge.');
+      setErrorMsg('Please select at least 2 PDF files to merge together.');
       setTimeout(() => setErrorMsg(''), 4000);
       return;
     }
@@ -145,12 +193,11 @@ export default function MergePdfTool() {
       setViewState('SUCCESS');
     } catch (err) {
       console.error('PDF Merge Error:', err);
-      setErrorMsg('Failed to merge PDFs. Please make sure the PDF files are not password protected.');
+      setErrorMsg('Failed to merge PDFs. Please ensure the PDF files are valid and not password protected.');
       setViewState('WORKSPACE');
     }
   };
 
-  // Trigger Instant Download
   const triggerDownload = () => {
     if (!mergedBlobUrl) return;
     const link = document.createElement('a');
@@ -161,7 +208,6 @@ export default function MergePdfTool() {
     document.body.removeChild(link);
   };
 
-  // Reset tool
   const resetTool = () => {
     setFiles([]);
     setViewState('SELECT');
@@ -173,272 +219,273 @@ export default function MergePdfTool() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <SeoHead
-        title="Merge PDF Files – 100% Free Online PDF Merger | WevePrint"
-        description="Combine PDFs in the order you want with the easiest PDF merger available. Drag & drop PDF files to combine them into one document."
+        title="Merge PDF Files Online – 100% Free PDF Merger | WevePrint"
+        description="Combine PDF files in the order you want with the easiest PDF merger available. 100% free, fast, and secure."
         canonicalUrl="https://weveprint.netlify.app/tools/merge-pdf"
       />
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col justify-between">
         
-        {/* ========================================================================= */}
-        {/* STATE 1: INITIAL SELECT SCREEN (Screenshot 1) */}
-        {/* ========================================================================= */}
+        {/* STATE 1: INITIAL SELECT SCREEN */}
         {viewState === 'SELECT' && (
           <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in duration-300">
+            <Link
+              to="/tools"
+              className="inline-flex items-center space-x-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors self-start"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to All PDF Tools</span>
+            </Link>
+
             <div className="space-y-3 max-w-2xl">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-red-950/80 border border-red-800/80 text-red-400 text-xs font-bold">
+                <Layers className="w-3.5 h-3.5" />
+                <span>PDF Organizer &amp; Merger</span>
+              </div>
               <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
                 Merge PDF files
               </h1>
               <p className="text-slate-400 text-sm sm:text-base">
-                Combine PDFs in the order you want with the easiest PDF merger available.
+                Combine PDF files in the order you want with real-time page previews. Drag &amp; drop to reorder!
               </p>
             </div>
 
-            {/* Red/Cyan Primary Select PDF Button matching Screenshot 1 */}
             <div className="space-y-3">
               <label className="inline-flex items-center space-x-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-lg sm:text-xl shadow-xl shadow-red-600/30 cursor-pointer transition-all hover:scale-105 active:scale-95">
                 <span>Select PDF files</span>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  multiple
                   accept="application/pdf,.pdf"
+                  multiple
                   onChange={handleFileSelect}
                   className="hidden"
                 />
               </label>
-              <p className="text-xs text-slate-400 font-medium">or drop PDFs here</p>
+              <p className="text-xs text-slate-500 font-medium">or drop PDFs here</p>
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-bold max-w-md">
-                ⚠️ {errorMsg}
+              <div className="p-4 rounded-xl bg-red-950/80 border border-red-800 text-red-300 text-xs font-bold max-w-md">
+                {errorMsg}
               </div>
             )}
-
-            {/* AD PLACEMENT 1: Bottom Banner AdSense Unit (slot 5915624899) */}
-            <MergePdfBottomAd />
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STATE 2: WORKSPACE & DRAG-AND-DROP CARDS (Screenshots 2 & 3) */}
-        {/* ========================================================================= */}
+        {/* STATE 2: INTERACTIVE WORKSPACE (Drag & Drop Reordering + Live Previews) */}
         {viewState === 'WORKSPACE' && (
-          <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            
-            {/* Main Grid: Left Workspace Cards + Right Sidebar Panel */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-              
-              {/* Left Workspace: PDF Cards Grid */}
-              <div className="lg:col-span-3 glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6 relative min-h-[420px]">
-                
-                {/* Cards Header Action Bar */}
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                  <span className="text-xs font-bold text-slate-400">
-                    {files.length} PDF File(s) Selected • Drag cards to reorder
-                  </span>
-                  
-                  {/* Floating Action Tools: Add More Files & Sort A-Z */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handleSortAZ}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors flex items-center space-x-1"
-                      title="Sort A-Z"
-                    >
-                      <SortAsc className="w-4 h-4 text-cyan-400" />
-                      <span>Sort A-Z</span>
-                    </button>
-
-                    <label className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-extrabold shadow-md cursor-pointer transition-transform hover:scale-105 flex items-center space-x-1">
-                      <Plus className="w-4 h-4" />
-                      <span>Add files</span>
-                      <input
-                        ref={addMoreInputRef}
-                        type="file"
-                        multiple
-                        accept="application/pdf,.pdf"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* PDF Cards Grid with Drag-and-Drop */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {files.map((item, index) => {
-                    const isDragging = draggedIndex === index;
-                    const isOver = dragOverIndex === index;
-                    return (
-                      <div
-                        key={item.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDrop={(e) => handleDrop(e, index)}
-                        onDragEnd={handleDragEnd}
-                        className={`relative group glass-card p-4 rounded-2xl border transition-all cursor-grab active:cursor-grabbing text-center space-y-3 ${
-                          isDragging
-                            ? 'opacity-40 scale-95 border-red-500'
-                            : isOver
-                            ? 'border-cyan-400 bg-cyan-950/40 scale-105'
-                            : 'border-slate-800 hover:border-cyan-500/60'
-                        }`}
-                      >
-                        {/* Number Index Badge */}
-                        <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-red-600 text-white font-extrabold text-[11px] flex items-center justify-center shadow-md">
-                          {index + 1}
-                        </div>
-
-                        {/* Delete Card Button */}
-                        <button
-                          onClick={() => removeFile(item.id)}
-                          className="absolute top-2 right-2 p-1 rounded-lg bg-slate-900/80 text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Remove PDF"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* PDF Thumbnail Canvas Box */}
-                        <div className="w-full h-36 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center p-3 text-cyan-400 group-hover:border-cyan-500/40 transition-colors">
-                          <FileText className="w-10 h-10 mb-1" />
-                          <span className="text-[10px] font-mono text-slate-400">{item.size} MB</span>
-                        </div>
-
-                        {/* PDF File Name */}
-                        <p className="text-xs font-bold text-white truncate px-1" title={item.name}>
-                          {item.name}
-                        </p>
-                      </div>
-                    );
-                  })}
+          <div className="flex-1 flex flex-col space-y-6 animate-in fade-in duration-300">
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 glass-card p-4 rounded-2xl border border-slate-800">
+              <div className="flex items-center space-x-3">
+                <Link
+                  to="/tools"
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Link>
+                <div>
+                  <h2 className="text-base font-extrabold text-white flex items-center space-x-2">
+                    <span>Merge PDFs</span>
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-mono">
+                      {files.length} {files.length === 1 ? 'file' : 'files'} selected
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-slate-400">
+                    Drag and drop cards to change sequence order
+                  </p>
                 </div>
               </div>
 
-              {/* Right Sidebar Panel matching Screenshots 2 & 3 */}
-              <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-6">
-                <h2 className="text-xl font-extrabold text-white">Merge PDF</h2>
-
-                {/* Instruction Alert Box matching Screenshot 3 */}
-                <div className="p-4 rounded-xl bg-cyan-950/70 border border-cyan-800/80 text-cyan-200 text-xs flex items-start space-x-2.5">
-                  <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                  <p className="leading-relaxed">
-                    To change the order of your PDFs, drag and drop the files as you want.
-                  </p>
-                </div>
-
-                {errorMsg && (
-                  <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-bold">
-                    ⚠️ {errorMsg}
-                  </div>
-                )}
-
-                {/* Submit Merge PDF Button matching Screenshot 2 & 3 */}
+              <div className="flex items-center space-x-3">
                 <button
-                  onClick={handleMergePdfs}
-                  disabled={files.length < 2}
-                  className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white transition-all shadow-xl shadow-red-600/30 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={handleSortAZ}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs font-bold hover:bg-slate-800 flex items-center space-x-1.5"
+                  title="Sort A to Z"
                 >
-                  <span>Merge PDF Files</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <SortAsc className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Sort A-Z</span>
+                </button>
+
+                <label className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs font-bold hover:bg-slate-800 cursor-pointer flex items-center space-x-1.5">
+                  <Plus className="w-3.5 h-3.5 text-red-400" />
+                  <span>Add More PDFs</span>
+                  <input
+                    ref={addMoreInputRef}
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Merge Action Button */}
+                <button
+                  onClick={handleMergePdf}
+                  disabled={files.length < 2 || isLoadingPreviews}
+                  className={`px-6 py-2.5 rounded-xl font-extrabold text-xs flex items-center space-x-2 shadow-lg transition-all ${
+                    files.length >= 2 && !isLoadingPreviews
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-600/30 scale-105'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                  }`}
+                >
+                  <span>Merge PDF</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2 pt-4">
+            {isLoadingPreviews && (
+              <div className="flex items-center justify-center space-x-2 text-cyan-400 font-bold text-xs py-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading HD PDF Page Previews...</span>
+              </div>
+            )}
+
+            {files.length < 2 && !isLoadingPreviews && (
+              <div className="p-3 rounded-xl bg-amber-950/70 border border-amber-800/80 text-amber-300 text-xs font-bold text-center">
+                ⚠️ Select at least 2 PDF files to activate the Merge PDF button.
+              </div>
+            )}
+
+            {errorMsg && (
+              <div className="p-3.5 rounded-xl bg-red-950/80 border border-red-800 text-red-300 text-xs font-bold text-center">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* Grid of PDF Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {files.map((fileObj, index) => (
+                <div
+                  key={fileObj.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`relative group glass-card p-3 rounded-2xl border transition-all cursor-move flex flex-col justify-between space-y-3 ${
+                    draggedIndex === index
+                      ? 'opacity-40 border-dashed border-red-500 scale-95'
+                      : dragOverIndex === index
+                      ? 'border-red-500 bg-red-950/40 ring-2 ring-red-500/50'
+                      : 'border-slate-800 hover:border-slate-700 hover:shadow-xl'
+                  }`}
+                >
+                  {/* Card Header Badge */}
+                  <div className="flex items-center justify-between">
+                    <span className="w-6 h-6 rounded-full bg-slate-900 border border-slate-700 text-white font-mono font-bold text-[10px] flex items-center justify-center">
+                      #{index + 1}
+                    </span>
+                    <button
+                      onClick={() => removeFile(fileObj.id)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors"
+                      title="Remove PDF"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Real-time PDF Cover Preview */}
+                  <div className="h-40 w-full rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center relative">
+                    {fileObj.coverUrl ? (
+                      <img
+                        src={fileObj.coverUrl}
+                        alt={`Preview of ${fileObj.name}`}
+                        className="h-full w-full object-contain p-1"
+                      />
+                    ) : (
+                      <FileText className="w-12 h-12 text-slate-700" />
+                    )}
+                    <span className="absolute bottom-1 right-1 px-2 py-0.5 rounded-md bg-slate-950/90 text-cyan-400 border border-cyan-800/80 text-[10px] font-extrabold font-mono">
+                      {fileObj.numPages} {fileObj.numPages === 1 ? 'Page' : 'Pages'}
+                    </span>
+                  </div>
+
+                  {/* Details & Move Controls */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-white truncate" title={fileObj.name}>
+                      {fileObj.name}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>{fileObj.size} MB</span>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => moveItem(index, -1)}
+                          disabled={index === 0}
+                          className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={() => moveItem(index, 1)}
+                          disabled={index === files.length - 1}
+                          className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-30"
+                        >
+                          ›
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom Ad in Workspace mode */}
+            <div className="pt-6">
               <MergePdfBottomAd />
             </div>
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STATE 3: MERGING PROCESSING SCREEN (Screenshot 4) */}
-        {/* ========================================================================= */}
+        {/* STATE 3: MERGING IN PROGRESS */}
         {viewState === 'MERGING' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in fade-in duration-300">
-            <MergePdfTopAd />
-
-            <div className="space-y-4">
-              <Loader2 className="w-16 h-16 text-red-500 animate-spin mx-auto" />
-              <h2 className="text-2xl font-extrabold text-white tracking-tight">Merging PDFs...</h2>
-              <p className="text-xs text-slate-400">Combining pages in specified order...</p>
+          <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-6 text-center animate-in fade-in duration-300">
+            <Loader2 className="w-14 h-14 text-red-500 animate-spin" />
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold text-white">Merging your PDF files...</h2>
+              <p className="text-xs text-slate-400">Compiling all PDF pages into a single document</p>
             </div>
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STATE 4: SUCCESS DOWNLOAD SCREEN (Screenshot 5) */}
-        {/* ========================================================================= */}
+        {/* STATE 4: SUCCESS & DOWNLOAD SCREEN */}
         {viewState === 'SUCCESS' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-8 animate-in zoom-in-95 duration-300">
-            
-            <div className="space-y-3">
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                PDFs have been merged!
-              </h2>
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in duration-300">
+            <MergePdfTopAd />
+
+            <div className="w-16 h-16 rounded-full bg-emerald-950 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
 
-            {/* Large Red/Cyan Download Button matching Screenshot 5 */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={resetTool}
-                className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
-                title="Start Over / Merge Another"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
+            <div className="space-y-2 max-w-md">
+              <h2 className="text-2xl sm:text-3xl font-black text-white">PDFs Merged Successfully!</h2>
+              <p className="text-xs text-slate-400 font-mono truncate">{mergedFileName}</p>
+            </div>
 
+            <div className="flex flex-col sm:flex-row items-center gap-3">
               <button
                 onClick={triggerDownload}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-lg sm:text-xl shadow-xl shadow-red-600/30 transition-all hover:scale-105 active:scale-95 flex items-center space-x-3"
+                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-lg shadow-xl shadow-emerald-500/30 flex items-center space-x-3 transition-all hover:scale-105 active:scale-95"
               >
-                <Download className="w-6 h-6" />
-                <span>Download merged PDF</span>
+                <Download className="w-5 h-5" />
+                <span>Download Merged PDF</span>
               </button>
 
               <button
                 onClick={resetTool}
-                className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors"
-                title="Clear Files"
+                className="px-6 py-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 font-bold text-sm hover:bg-slate-800"
               >
-                <Trash2 className="w-6 h-6" />
+                Merge another PDF
               </button>
             </div>
 
-            {/* Continue to... Recommendations Grid matching Screenshot 5 */}
-            <div className="glass-card p-8 rounded-2xl border border-slate-800 max-w-3xl w-full space-y-6 text-left">
-              <h3 className="text-sm font-extrabold text-slate-300 uppercase tracking-wider">Continue to...</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Link
-                  to="/tools"
-                  className="p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 flex items-center space-x-3 transition-colors group"
-                >
-                  <FileArchive className="w-5 h-5 text-emerald-400 shrink-0" />
-                  <span className="text-xs font-bold text-white group-hover:text-cyan-400">Compress PDF</span>
-                </Link>
-
-                <Link
-                  to="/tools"
-                  className="p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 flex items-center space-x-3 transition-colors group"
-                >
-                  <Scissors className="w-5 h-5 text-red-400 shrink-0" />
-                  <span className="text-xs font-bold text-white group-hover:text-cyan-400">Split PDF</span>
-                </Link>
-
-                <Link
-                  to="/tools"
-                  className="p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 flex items-center space-x-3 transition-colors group"
-                >
-                  <Lock className="w-5 h-5 text-indigo-400 shrink-0" />
-                  <span className="text-xs font-bold text-white group-hover:text-cyan-400">Protect PDF</span>
-                </Link>
-              </div>
+            <div className="pt-6 w-full">
+              <MergePdfBottomAd />
             </div>
-
-            <MergePdfBottomAd />
           </div>
         )}
       </main>

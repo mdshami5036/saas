@@ -18,6 +18,7 @@ import PdfToolsHub from './pages/PdfToolsHub';
 import MergePdfTool from './pages/tools/MergePdfTool';
 import SplitPdfTool from './pages/tools/SplitPdfTool';
 import RemovePagesTool from './pages/tools/RemovePagesTool';
+import OrganizePdfRunner from './pages/tools/OrganizePdfRunner';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
 import ImageToolsRunner from './pages/tools/ImageToolsRunner';
 import QrToolsRunner from './pages/tools/QrToolsRunner';
@@ -89,8 +90,8 @@ export default function App() {
       <Route path="/tools/image-enhancer" element={<ImageToolsRunner toolId="image-enhancer" toolTitle="Image Enhancer" toolDescription="Improve brightness, contrast, and clarity of your photos." />} />
       <Route path="/tools/image-watermark" element={<ImageToolsRunner toolId="image-watermark" toolTitle="Image Watermark" toolDescription="Add custom text or logo watermarks onto your photos for protection." />} />
 
-      <Route path="/tools/extract-pages" element={<GenericPdfTool toolTitle="Extract Pages" toolDescription="Extract specific pages from your PDF document." actionButtonText="Extract Pages" />} />
-      <Route path="/tools/organize-pdf" element={<GenericPdfTool toolTitle="Organize PDF" toolDescription="Sort, re-order, rotate or delete pages inside your PDF document." actionButtonText="Organize PDF" />} />
+      <Route path="/tools/extract-pages" element={<SplitPdfTool isExtractMode={true} />} />
+      <Route path="/tools/organize-pdf" element={<OrganizePdfRunner />} />
       <Route path="/tools/scan-to-pdf" element={<GenericPdfTool toolTitle="Scan to PDF" toolDescription="Capture document scans using mobile camera or images into PDF." actionButtonText="Scan to PDF" acceptFileType="image/*" />} />
       
       <Route path="/tools/compress-pdf" element={<GenericPdfTool toolTitle="Compress PDF" toolDescription="Reduce file size while optimizing for maximal PDF quality." actionButtonText="Compress PDF" />} />
