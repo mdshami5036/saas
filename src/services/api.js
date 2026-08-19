@@ -23,10 +23,12 @@ const api = axios.create({
   },
 });
 
-// Attach Auth Token automatically
+// Attach Auth Token automatically (admin_token or tenant_token)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('tenant_token');
+    const adminToken = localStorage.getItem('admin_token');
+    const tenantToken = localStorage.getItem('tenant_token');
+    const token = adminToken || tenantToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,7 +42,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('tenant_token');
+      // Don't auto purge if login route
+      if (!error.config.url.includes('/login')) {
+        localStorage.removeItem('tenant_token');
+        localStorage.removeItem('admin_token');
+      }
     }
     return Promise.reject(error);
   }
