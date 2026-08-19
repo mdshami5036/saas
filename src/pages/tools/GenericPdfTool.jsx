@@ -46,6 +46,7 @@ export default function GenericPdfTool({
   const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
   const [processedBlobUrl, setProcessedBlobUrl] = useState('');
   const [processedFileName, setProcessedFileName] = useState('');
+  const [convertedJpgPages, setConvertedJpgPages] = useState([]);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Render Large HD previews for uploaded PDF or document files
@@ -65,11 +66,13 @@ export default function GenericPdfTool({
 
           for (let i = 1; i <= pdfDoc.numPages; i++) {
             const page = await pdfDoc.getPage(i);
-            const viewport = page.getViewport({ scale: 1.0 }); // 1.0 Large Sharp HD scale
+            const viewport = page.getViewport({ scale: 1.5 }); // 1.5 HD preview scale
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             await page.render({ canvasContext: ctx, viewport }).promise;
 
             previews.push({
@@ -139,6 +142,7 @@ export default function GenericPdfTool({
 
     setViewState('PROCESSING');
     setErrorMsg('');
+    setConvertedJpgPages([]);
     trackToolExecution(toolTitle.toLowerCase().replace(/\s+/g, '-'), toolTitle, 'PDF Tools');
 
     try {
@@ -148,7 +152,7 @@ export default function GenericPdfTool({
       let extension = '.pdf';
       let mimeType = 'application/pdf';
 
-      // 1. PDF TO JPG / IMAGE (3.0x 300 DPI Ultra-HD Export)
+      // 1. PDF TO JPG / IMAGE (All Pages 3.0x 300 DPI Ultra-HD Direct JPG Downloads - NO ZIP)
       if (lowerTitle.includes('pdf to jpg') || lowerTitle.includes('pdf to image')) {
         extension = '.jpg';
         mimeType = 'image/jpeg';
@@ -157,18 +161,39 @@ export default function GenericPdfTool({
           const arrayBuffer = await firstFile.arrayBuffer();
           const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
           const pdfDoc = await loadingTask.promise;
-          const page = await pdfDoc.getPage(1);
-          const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 300 DPI Ultra HD
+          const jpgList = [];
 
-          const canvas = document.createElement('canvas');
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 300 DPI Ultra HD
 
-          outputBlob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.98));
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.98));
+            const downloadUrl = URL.createObjectURL(blob);
+            const cleanName = firstFile.name.replace(/\.[^/.]+$/, '');
+            const fileName = `${cleanName}_page_${i}.jpg`;
+
+            jpgList.push({
+              pageNumber: i,
+              totalPages: pdfDoc.numPages,
+              dataUrl: canvas.toDataURL('image/jpeg', 0.98),
+              downloadUrl,
+              fileName,
+              blob,
+            });
+          }
+
+          setConvertedJpgPages(jpgList);
+          setProcessedFileName(`${firstFile.name.replace(/\.[^/.]+$/, '')}_all_pages.jpg`);
+          setViewState('SUCCESS');
+          return;
         } else if (pagePreviews.length > 0) {
           const res = await fetch(pagePreviews[0].dataUrl);
           outputBlob = await res.blob();
@@ -272,7 +297,36 @@ export default function GenericPdfTool({
     }
   };
 
+  // Download All Converted JPG Pages Direct to Disk (No ZIP)
+  const downloadAllJpgPages = () => {
+    if (convertedJpgPages.length === 0) return;
+    convertedJpgPages.forEach((item, idx) => {
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = item.downloadUrl;
+        link.download = item.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, idx * 250);
+    });
+  };
+
+  // Download Single JPG Page
+  const downloadSingleJpgPage = (item) => {
+    const link = document.createElement('a');
+    link.href = item.downloadUrl;
+    link.download = item.fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const triggerDownload = () => {
+    if (convertedJpgPages.length > 0) {
+      downloadAllJpgPages();
+      return;
+    }
     if (!processedBlobUrl) return;
     const link = document.createElement('a');
     link.href = processedBlobUrl;
@@ -286,6 +340,7 @@ export default function GenericPdfTool({
     setFiles([]);
     setPagePreviews([]);
     setTotalPageCount(0);
+    setConvertedJpgPages([]);
     setViewState('SELECT');
     setProcessedBlobUrl('');
     setProcessedFileName('');
@@ -470,14 +525,14 @@ export default function GenericPdfTool({
             <Loader2 className="w-14 h-14 text-cyan-500 animate-spin" />
             <div className="space-y-2">
               <h2 className="text-2xl font-extrabold text-white">Converting your document...</h2>
-              <p className="text-xs text-slate-400">Processing high-precision file conversion</p>
+              <p className="text-xs text-slate-400">Rendering 3.0x 300 DPI Ultra-HD pages directly</p>
             </div>
           </div>
         )}
 
         {/* STATE 4: SUCCESS & DOWNLOAD SCREEN */}
         {viewState === 'SUCCESS' && (
-          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in duration-300">
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center space-y-8 animate-in fade-in duration-300">
             <AllToolsTopAd />
 
             <div className="w-16 h-16 rounded-full bg-emerald-950 border border-emerald-500/50 flex items-center justify-center text-emerald-400">
@@ -485,17 +540,26 @@ export default function GenericPdfTool({
             </div>
 
             <div className="space-y-2 max-w-md">
-              <h2 className="text-2xl sm:text-3xl font-black text-white">Conversion Successful!</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">
+                {convertedJpgPages.length > 0
+                  ? `All ${convertedJpgPages.length} Pages Converted to Ultra-HD JPG!`
+                  : 'Conversion Successful!'}
+              </h2>
               <p className="text-xs text-slate-400 font-mono truncate">{processedFileName}</p>
             </div>
 
+            {/* Main Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-3">
               <button
                 onClick={triggerDownload}
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-lg shadow-xl shadow-emerald-500/30 flex items-center space-x-3 transition-all hover:scale-105 active:scale-95"
               >
                 <Download className="w-5 h-5" />
-                <span>Download Converted File</span>
+                <span>
+                  {convertedJpgPages.length > 0
+                    ? `Download All ${convertedJpgPages.length} JPG Pages Directly`
+                    : 'Download Converted File'}
+                </span>
               </button>
 
               <button
@@ -505,6 +569,46 @@ export default function GenericPdfTool({
                 Convert Another Document
               </button>
             </div>
+
+            {/* Grid View for Converted JPG Pages with Individual Download Buttons */}
+            {convertedJpgPages.length > 0 && (
+              <div className="w-full max-w-5xl space-y-4 text-left pt-6 border-t border-slate-800">
+                <h3 className="text-sm font-extrabold text-white flex items-center justify-between">
+                  <span>Converted 300 DPI JPG Page Files ({convertedJpgPages.length})</span>
+                  <span className="text-xs text-cyan-400 font-mono">Direct 100% Quality JPG Downloads</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {convertedJpgPages.map((item) => (
+                    <div
+                      key={item.pageNumber}
+                      className="glass-card p-3 rounded-2xl border border-slate-800 text-center space-y-3 shadow-lg"
+                    >
+                      <div className="h-64 w-full rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center">
+                        <img
+                          src={item.dataUrl}
+                          alt={`Page ${item.pageNumber}`}
+                          className="h-full w-full object-contain p-1"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs font-mono font-bold px-1 text-slate-400">
+                        <span>Page {item.pageNumber} of {item.totalPages}</span>
+                        <span className="text-emerald-400">JPG</span>
+                      </div>
+
+                      <button
+                        onClick={() => downloadSingleJpgPage(item)}
+                        className="w-full py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-emerald-500 text-emerald-400 hover:bg-slate-800 font-extrabold text-xs flex items-center justify-center space-x-2 transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download Page {item.pageNumber} JPG</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="pt-6 w-full">
               <AllToolsBottomAd />
