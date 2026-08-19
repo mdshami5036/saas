@@ -8,6 +8,7 @@ import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import ImageTopAd from '../../components/ImageTopAd';
 import ImageBottomAd from '../../components/ImageBottomAd';
+import { trackToolExecution } from '../../utils/analyticsTracker';
 import {
   Image as ImageIcon,
   UploadCloud,
@@ -295,6 +296,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
     setViewState('PROCESSING');
     setIsProcessing(true);
     setErrorMsg('');
+    trackToolExecution(toolId, toolTitle, 'Image Tools');
 
     try {
       let outputBlob = null;

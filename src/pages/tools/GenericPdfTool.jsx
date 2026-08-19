@@ -8,6 +8,7 @@ import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import AllToolsTopAd from '../../components/AllToolsTopAd';
 import AllToolsBottomAd from '../../components/AllToolsBottomAd';
+import { trackToolExecution } from '../../utils/analyticsTracker';
 import {
   FileText,
   UploadCloud,
@@ -138,6 +139,7 @@ export default function GenericPdfTool({
 
     setViewState('PROCESSING');
     setErrorMsg('');
+    trackToolExecution(toolTitle.toLowerCase().replace(/\s+/g, '-'), toolTitle, 'PDF Tools');
 
     try {
       const firstFile = files[0].file;

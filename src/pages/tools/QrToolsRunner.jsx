@@ -59,11 +59,11 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
   const [waMessage, setWaMessage] = useState('Hello, I want to print a document!');
 
   // vCard
-  const [vFirstName, setVFirstName] = useState('Md');
-  const [vLastName, setVLastName] = useState('Shami');
-  const [vPhone, setVPhone] = useState('+91 7762839216');
+  const [vFirstName, setVFirstName] = useState('John');
+  const [vLastName, setVLastName] = useState('Doe');
+  const [vPhone, setVPhone] = useState('+91 9876543210');
   const [vEmail, setVEmail] = useState('support@weveprint.com');
-  const [vOrg, setVOrg] = useState('WevePrint India');
+  const [vOrg, setVOrg] = useState('WevePrint Demo Shop');
 
   // Maps
   const [mapLocation, setMapLocation] = useState('https://maps.google.com/?q=28.6139,77.2090');
