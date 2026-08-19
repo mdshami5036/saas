@@ -19,6 +19,7 @@ import SplitPdfTool from './pages/tools/SplitPdfTool';
 import RemovePagesTool from './pages/tools/RemovePagesTool';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
 import ImageToolsRunner from './pages/tools/ImageToolsRunner';
+import QrToolsRunner from './pages/tools/QrToolsRunner';
 
 // Documentation Guides Pages
 import HowQrPrintingWorks from './pages/docs/HowQrPrintingWorks';
@@ -40,6 +41,20 @@ export default function App() {
       <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
       <Route path="/tools/split-pdf" element={<SplitPdfTool />} />
       <Route path="/tools/remove-pages" element={<RemovePagesTool />} />
+
+      {/* Dedicated QR Code Tools Category */}
+      <Route path="/tools/qr-generator" element={<QrToolsRunner toolId="qr-generator" toolTitle="QR Code Generator" toolDescription="Convert any text or web URL into a high resolution QR code instantly." />} />
+      <Route path="/tools/qr-scanner" element={<QrToolsRunner toolId="qr-scanner" toolTitle="QR Code Scanner" toolDescription="Scan QR codes using camera or uploaded image right in your browser." />} />
+      <Route path="/tools/qr-decoder" element={<QrToolsRunner toolId="qr-decoder" toolTitle="QR Code Decoder" toolDescription="Decode QR code image files locally to extract embedded text or URLs." />} />
+      <Route path="/tools/wifi-qr" element={<QrToolsRunner toolId="wifi-qr" toolTitle="WiFi QR Code" toolDescription="Generate WiFi connect QR codes for instant passwordless connection." />} />
+      <Route path="/tools/upi-qr" element={<QrToolsRunner toolId="upi-qr" toolTitle="UPI QR Code" toolDescription="Generate UPI payment QR codes (BHIM, PhonePe, Paytm, Google Pay)." />} />
+      <Route path="/tools/whatsapp-qr" element={<QrToolsRunner toolId="whatsapp-qr" toolTitle="WhatsApp QR Code" toolDescription="Create direct WhatsApp chat QR codes with pre-filled text messages." />} />
+      <Route path="/tools/vcard-qr" element={<QrToolsRunner toolId="vcard-qr" toolTitle="vCard QR Code" toolDescription="Share contact business cards (Name, Phone, Email, Org) via QR code." />} />
+      <Route path="/tools/maps-qr" element={<QrToolsRunner toolId="maps-qr" toolTitle="Google Maps QR Code" toolDescription="Share Google Maps location links or GPS coordinates via QR code." />} />
+      <Route path="/tools/social-qr" element={<QrToolsRunner toolId="social-qr" toolTitle="Social Media QR Code" toolDescription="Create QR codes linking directly to your Instagram, YouTube or Facebook." />} />
+      <Route path="/tools/qr-with-logo" element={<QrToolsRunner toolId="qr-with-logo" toolTitle="QR Code with Logo" toolDescription="Embed your company logo in the center of generated QR codes." />} />
+      <Route path="/tools/custom-qr" element={<QrToolsRunner toolId="custom-qr" toolTitle="Custom QR Code" toolDescription="Customize QR code foreground/background colors and dot styles." />} />
+      <Route path="/tools/bulk-qr-generator" element={<QrToolsRunner toolId="bulk-qr-generator" toolTitle="Bulk QR Code Generator" toolDescription="Generate multiple QR codes simultaneously for lists or CSVs." />} />
 
       {/* Dedicated Image Tools Category */}
       <Route path="/tools/image-compressor" element={<ImageToolsRunner toolId="image-compressor" toolTitle="Image Compressor" toolDescription="Reduce image file size while keeping high visual quality." />} />
