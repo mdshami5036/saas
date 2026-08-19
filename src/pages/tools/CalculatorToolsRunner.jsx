@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
-import CalculatorTopAd from '../../components/CalculatorTopAd';
 import CalculatorBottomAd from '../../components/CalculatorBottomAd';
 import {
   Calculator,
@@ -25,83 +24,95 @@ import {
 } from 'lucide-react';
 
 export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescription }) {
-  // Common states
-  const [errorMsg, setErrorMsg] = useState('');
+  // Helper to prevent leading zeroes (e.g. typing "5" when "0" was there results in "5", not "05")
+  const createNumHandler = (setter) => (e) => {
+    let raw = e.target.value;
+    if (raw === '') {
+      setter('');
+      return;
+    }
+    // Strip leading zeroes if followed by integer digits (e.g. "05" -> "5", "00" -> "0")
+    if (raw.length > 1 && raw.startsWith('0') && !raw.startsWith('0.')) {
+      raw = raw.replace(/^0+/, '');
+      if (raw === '') raw = '0';
+    }
+    setter(raw);
+  };
 
   // 1. Percentage
-  const [percNum, setPercNum] = useState(250);
-  const [percRate, setPercRate] = useState(15);
+  const [percNum, setPercNum] = useState('250');
+  const [percRate, setPercRate] = useState('15');
   // 2. Age
   const [dob, setDob] = useState('1998-05-15');
   // 3. Date
   const [startDate, setStartDate] = useState('2026-01-01');
   const [endDate, setEndDate] = useState('2026-12-31');
   // 4. EMI
-  const [loanAmount, setLoanAmount] = useState(500000);
-  const [loanInterest, setLoanInterest] = useState(9.5);
-  const [loanTenureYears, setLoanTenureYears] = useState(5);
+  const [loanAmount, setLoanAmount] = useState('500000');
+  const [loanInterest, setLoanInterest] = useState('9.5');
+  const [loanTenureYears, setLoanTenureYears] = useState('5');
   // 5. GST
-  const [gstAmount, setGstAmount] = useState(1000);
-  const [gstRate, setGstRate] = useState(18);
+  const [gstAmount, setGstAmount] = useState('1000');
+  const [gstRate, setGstRate] = useState('18');
   const [gstType, setGstType] = useState('exclusive'); // 'exclusive' | 'inclusive'
   // 6. Profit & Loss
-  const [costPrice, setCostPrice] = useState(800);
-  const [sellingPrice, setSellingPrice] = useState(1000);
+  const [costPrice, setCostPrice] = useState('800');
+  const [sellingPrice, setSellingPrice] = useState('1000');
   // 7. Simple Interest
-  const [siPrincipal, setSiPrincipal] = useState(100000);
-  const [siRate, setSiRate] = useState(8);
-  const [siTime, setSiTime] = useState(3);
+  const [siPrincipal, setSiPrincipal] = useState('100000');
+  const [siRate, setSiRate] = useState('8');
+  const [siTime, setSiTime] = useState('3');
   // 8. Compound Interest
-  const [ciPrincipal, setCiPrincipal] = useState(100000);
-  const [ciRate, setCiRate] = useState(8);
-  const [ciTime, setCiTime] = useState(3);
-  const [ciFrequency, setCiFrequency] = useState(1); // 1 yearly, 4 quarterly, 12 monthly
+  const [ciPrincipal, setCiPrincipal] = useState('100000');
+  const [ciRate, setCiRate] = useState('8');
+  const [ciTime, setCiTime] = useState('3');
+  const [ciFrequency, setCiFrequency] = useState('1'); // '1' yearly, '4' quarterly, '12' monthly
   // 9. SIP
-  const [sipMonthly, setSipMonthly] = useState(5000);
-  const [sipRate, setSipRate] = useState(12);
-  const [sipYears, setSipYears] = useState(10);
+  const [sipMonthly, setSipMonthly] = useState('5000');
+  const [sipRate, setSipRate] = useState('12');
+  const [sipYears, setSipYears] = useState('10');
   // 10. SWP
-  const [swpInvestment, setSwpInvestment] = useState(1000000);
-  const [swpWithdrawal, setSwpWithdrawal] = useState(8000);
-  const [swpRate, setSwpRate] = useState(8);
-  const [swpYears, setSwpYears] = useState(10);
+  const [swpInvestment, setSwpInvestment] = useState('1000000');
+  const [swpWithdrawal, setSwpWithdrawal] = useState('8000');
+  const [swpRate, setSwpRate] = useState('8');
+  const [swpYears, setSwpYears] = useState('10');
   // 11. Lumpsum
-  const [lumpAmount, setLumpAmount] = useState(100000);
-  const [lumpRate, setLumpRate] = useState(12);
-  const [lumpYears, setLumpYears] = useState(10);
+  const [lumpAmount, setLumpAmount] = useState('100000');
+  const [lumpRate, setLumpRate] = useState('12');
+  const [lumpYears, setLumpYears] = useState('10');
   // 12. FD
-  const [fdPrincipal, setFdPrincipal] = useState(100000);
-  const [fdRate, setFdRate] = useState(7.1);
-  const [fdYears, setFdYears] = useState(5);
+  const [fdPrincipal, setFdPrincipal] = useState('100000');
+  const [fdRate, setFdRate] = useState('7.1');
+  const [fdYears, setFdYears] = useState('5');
   // 13. RD
-  const [rdMonthly, setRdMonthly] = useState(2000);
-  const [rdRate, setRdRate] = useState(7.0);
-  const [rdYears, setRdYears] = useState(3);
+  const [rdMonthly, setRdMonthly] = useState('2000');
+  const [rdRate, setRdRate] = useState('7.0');
+  const [rdYears, setRdYears] = useState('3');
   // 14. PPF
-  const [ppfYearly, setPpfYearly] = useState(150000);
-  const [ppfRate] = useState(7.1);
-  const [ppfYears] = useState(15);
+  const [ppfYearly, setPpfYearly] = useState('150000');
   // 15. NPS
-  const [npsMonthly, setNpsMonthly] = useState(5000);
-  const [npsCurrentAge, setNpsCurrentAge] = useState(25);
-  const [npsReturnRate, setNpsReturnRate] = useState(10);
+  const [npsMonthly, setNpsMonthly] = useState('5000');
+  const [npsCurrentAge, setNpsCurrentAge] = useState('25');
+  const [npsReturnRate, setNpsReturnRate] = useState('10');
 
-  // Math Calculation Generators
+  // Math Calculation Logic
   const calculateResult = () => {
     try {
       // 1. PERCENTAGE
       if (toolId === 'percentage-calculator') {
-        const val = (percNum * percRate) / 100;
+        const num = parseFloat(percNum) || 0;
+        const rate = parseFloat(percRate) || 0;
+        const val = (num * rate) / 100;
         return {
-          title: `${percRate}% of ${percNum}`,
+          title: `${rate}% of ${num}`,
           value: `₹${val.toFixed(2)}`,
-          formula: `Formula: (${percNum} × ${percRate}) / 100 = ${val}`,
+          formula: `Formula: (${num} × ${rate}) / 100 = ${val}`,
           details: [
-            { label: 'Original Amount', val: `₹${percNum}` },
-            { label: 'Percentage Rate', val: `${percRate}%` },
+            { label: 'Original Amount', val: `₹${num}` },
+            { label: 'Percentage Rate', val: `${rate}%` },
             { label: 'Calculated Value', val: `₹${val.toFixed(2)}` },
-            { label: 'Total After Addition (+)', val: `₹${(percNum + val).toFixed(2)}` },
-            { label: 'Total After Subtraction (-)', val: `₹${(percNum - val).toFixed(2)}` },
+            { label: 'Total After Addition (+)', val: `₹${(num + val).toFixed(2)}` },
+            { label: 'Total After Subtraction (-)', val: `₹${(num - val).toFixed(2)}` },
           ],
         };
       }
@@ -163,10 +174,10 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 4. EMI CALCULATOR
       if (toolId === 'emi-calculator') {
-        const p = loanAmount;
-        const r = loanInterest / 12 / 100;
-        const n = loanTenureYears * 12;
-        const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        const p = parseFloat(loanAmount) || 0;
+        const r = (parseFloat(loanInterest) || 0) / 12 / 100;
+        const n = (parseFloat(loanTenureYears) || 0) * 12;
+        const emi = n > 0 && r > 0 ? (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : 0;
         const totalPayment = emi * n;
         const totalInterest = totalPayment - p;
 
@@ -185,8 +196,8 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 5. GST CALCULATOR
       if (toolId === 'gst-calculator') {
-        const amount = gstAmount;
-        const rate = gstRate;
+        const amount = parseFloat(gstAmount) || 0;
+        const rate = parseFloat(gstRate) || 0;
         let netAmount, gstVal, totalAmount;
 
         if (gstType === 'exclusive') {
@@ -215,8 +226,8 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 6. PROFIT & LOSS CALCULATOR
       if (toolId === 'profit-loss-calculator') {
-        const cp = costPrice;
-        const sp = sellingPrice;
+        const cp = parseFloat(costPrice) || 0;
+        const sp = parseFloat(sellingPrice) || 0;
         const diff = sp - cp;
         const isProfit = diff >= 0;
         const perc = cp > 0 ? (Math.abs(diff) / cp) * 100 : 0;
@@ -237,9 +248,9 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 7. SIMPLE INTEREST CALCULATOR
       if (toolId === 'simple-interest-calculator') {
-        const p = siPrincipal;
-        const r = siRate;
-        const t = siTime;
+        const p = parseFloat(siPrincipal) || 0;
+        const r = parseFloat(siRate) || 0;
+        const t = parseFloat(siTime) || 0;
         const interest = (p * r * t) / 100;
         const total = p + interest;
 
@@ -259,10 +270,10 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 8. COMPOUND INTEREST CALCULATOR
       if (toolId === 'compound-interest-calculator') {
-        const p = ciPrincipal;
-        const r = ciRate / 100;
-        const t = ciTime;
-        const n = ciFrequency;
+        const p = parseFloat(ciPrincipal) || 0;
+        const r = (parseFloat(ciRate) || 0) / 100;
+        const t = parseFloat(ciTime) || 0;
+        const n = parseFloat(ciFrequency) || 1;
         const amount = p * Math.pow(1 + r / n, n * t);
         const interest = amount - p;
 
@@ -282,11 +293,11 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 9. SIP CALCULATOR
       if (toolId === 'sip-calculator') {
-        const i = sipMonthly;
-        const r = sipRate / 12 / 100;
-        const n = sipYears * 12;
+        const i = parseFloat(sipMonthly) || 0;
+        const r = (parseFloat(sipRate) || 0) / 12 / 100;
+        const n = (parseFloat(sipYears) || 0) * 12;
         const totalInvested = i * n;
-        const maturityValue = i * (Math.pow(1 + r, n) - 1) * (1 + r) / r;
+        const maturityValue = r > 0 ? (i * (Math.pow(1 + r, n) - 1) * (1 + r)) / r : totalInvested;
         const estimatedReturns = maturityValue - totalInvested;
 
         return {
@@ -304,10 +315,11 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 10. SWP CALCULATOR
       if (toolId === 'swp-calculator') {
-        const totalInvested = swpInvestment;
-        const monthlyDraw = swpWithdrawal;
-        const r = swpRate / 12 / 100;
-        const n = swpYears * 12;
+        const totalInvested = parseFloat(swpInvestment) || 0;
+        const monthlyDraw = parseFloat(swpWithdrawal) || 0;
+        const r = (parseFloat(swpRate) || 0) / 12 / 100;
+        const years = parseFloat(swpYears) || 0;
+        const n = years * 12;
 
         let balance = totalInvested;
         let totalWithdrawn = 0;
@@ -321,7 +333,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
         return {
           title: 'Total Withdrawn Value',
           value: `₹${totalWithdrawn.toLocaleString()}`,
-          formula: `SWP Monthly Withdrawal for ${swpYears} Years`,
+          formula: `SWP Monthly Withdrawal for ${years} Years`,
           details: [
             { label: 'Initial Investment', val: `₹${totalInvested.toLocaleString()}` },
             { label: 'Monthly Withdrawal', val: `₹${monthlyDraw.toLocaleString()}` },
@@ -333,9 +345,9 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 11. LUMPSUM CALCULATOR
       if (toolId === 'lumpsum-calculator') {
-        const p = lumpAmount;
-        const r = lumpRate / 100;
-        const n = lumpYears;
+        const p = parseFloat(lumpAmount) || 0;
+        const r = (parseFloat(lumpRate) || 0) / 100;
+        const n = parseFloat(lumpYears) || 0;
         const maturity = p * Math.pow(1 + r, n);
         const returns = maturity - p;
 
@@ -353,16 +365,16 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 12. FD CALCULATOR
       if (toolId === 'fd-calculator') {
-        const p = fdPrincipal;
-        const r = fdRate / 100;
-        const t = fdYears;
+        const p = parseFloat(fdPrincipal) || 0;
+        const r = (parseFloat(fdRate) || 0) / 100;
+        const t = parseFloat(fdYears) || 0;
         const maturity = p * Math.pow(1 + r / 4, 4 * t);
         const interest = maturity - p;
 
         return {
           title: 'FD Maturity Value',
           value: `₹${Math.round(maturity).toLocaleString()}`,
-          formula: `Quarterly Compounded FD Calculation`,
+          formula: `Quarterly Compounded Bank FD Calculation`,
           details: [
             { label: 'Principal Deposit', val: `₹${p.toLocaleString()}` },
             { label: 'Interest Rate', val: `${fdRate}%` },
@@ -374,9 +386,10 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 13. RD CALCULATOR
       if (toolId === 'rd-calculator') {
-        const p = rdMonthly;
-        const r = rdRate / 100;
-        const n = rdYears * 12;
+        const p = parseFloat(rdMonthly) || 0;
+        const r = (parseFloat(rdRate) || 0) / 100;
+        const t = parseFloat(rdYears) || 0;
+        const n = t * 12;
         const totalInvested = p * n;
 
         let maturity = 0;
@@ -388,7 +401,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
         return {
           title: 'RD Maturity Value',
           value: `₹${Math.round(maturity).toLocaleString()}`,
-          formula: `Recurring Deposit Compound Calculation`,
+          formula: `Recurring Deposit Quarterly Compound Calculation`,
           details: [
             { label: 'Monthly Installment', val: `₹${p.toLocaleString()}` },
             { label: 'Total Amount Invested', val: `₹${totalInvested.toLocaleString()}` },
@@ -400,9 +413,9 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
 
       // 14. PPF CALCULATOR
       if (toolId === 'ppf-calculator') {
-        const p = ppfYearly;
-        const r = ppfRate / 100;
-        const n = ppfYears;
+        const p = parseFloat(ppfYearly) || 0;
+        const r = 7.1 / 100; // Govt Fixed PPF Rate
+        const n = 15;
         const totalInvested = p * n;
 
         let balance = 0;
@@ -414,46 +427,57 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
         return {
           title: 'PPF 15-Year Maturity Value',
           value: `₹${Math.round(balance).toLocaleString()}`,
-          formula: `Government PPF Scheme @ 7.1% Compound Interest`,
+          formula: `Government PPF Scheme @ 7.1% Tax-Free Compound Interest`,
           details: [
             { label: 'Yearly Contribution', val: `₹${p.toLocaleString()}` },
             { label: 'Total Invested (15 Yrs)', val: `₹${totalInvested.toLocaleString()}` },
-            { label: 'Total Interest Earned', val: `₹${Math.round(interest).toLocaleString()}` },
-            { label: 'Total Tax-Free Maturity', val: `₹${Math.round(balance).toLocaleString()}` },
+            { label: 'Tax-Free Interest Earned', val: `₹${Math.round(interest).toLocaleString()}` },
+            { label: 'Final Maturity Corpus', val: `₹${Math.round(balance).toLocaleString()}` },
           ],
         };
       }
 
       // 15. NPS CALCULATOR
       if (toolId === 'nps-calculator') {
-        const monthly = npsMonthly;
-        const years = Math.max(1, 60 - npsCurrentAge);
-        const r = npsReturnRate / 12 / 100;
+        const p = parseFloat(npsMonthly) || 0;
+        const age = parseFloat(npsCurrentAge) || 25;
+        const r = (parseFloat(npsReturnRate) || 10) / 12 / 100;
+        const years = Math.max(1, 60 - age);
         const n = years * 12;
-        const totalInvested = monthly * n;
-        const corpus = monthly * (Math.pow(1 + r, n) - 1) * (1 + r) / r;
-
-        // 60% Lump sum tax free, 40% Annuity for pension
-        const annuityCorpus = corpus * 0.4;
-        const monthlyPension = (annuityCorpus * 0.06) / 12;
+        const totalInvested = p * n;
+        const maturityCorpus = r > 0 ? (p * (Math.pow(1 + r, n) - 1) * (1 + r)) / r : totalInvested;
+        const minLumpsum = maturityCorpus * 0.6; // 60% tax free withdrawal
+        const annuityCorpus = maturityCorpus * 0.4; // 40% annuity for pension
 
         return {
-          title: 'Expected Pension Corpus',
-          value: `₹${Math.round(corpus).toLocaleString()}`,
-          formula: `NPS Accumulation till Age 60 (${years} Years)`,
+          title: 'NPS Retirement Wealth Corpus',
+          value: `₹${Math.round(maturityCorpus).toLocaleString()}`,
+          formula: `National Pension System (Age ${age} to 60 Years)`,
           details: [
-            { label: 'Monthly Contribution', val: `₹${monthly.toLocaleString()}` },
+            { label: 'Monthly Contribution', val: `₹${p.toLocaleString()}` },
+            { label: 'Total Investment Period', val: `${years} Years` },
             { label: 'Total Amount Invested', val: `₹${totalInvested.toLocaleString()}` },
-            { label: 'Estimated Retirement Corpus', val: `₹${Math.round(corpus).toLocaleString()}` },
-            { label: 'Estimated Monthly Pension', val: `₹${Math.round(monthlyPension).toLocaleString()}` },
+            { label: 'Lumpsum Withdrawal (60%)', val: `₹${Math.round(minLumpsum).toLocaleString()}` },
+            { label: 'Annuity Corpus (40%)', val: `₹${Math.round(annuityCorpus).toLocaleString()}` },
+            { label: 'Total Pension Corpus', val: `₹${Math.round(maturityCorpus).toLocaleString()}` },
           ],
         };
       }
 
-      return null;
-    } catch (e) {
-      console.error('Calculator error:', e);
-      return null;
+      // Fallback
+      return {
+        title: 'Calculator Result',
+        value: '₹0',
+        formula: 'Formula Result',
+        details: [],
+      };
+    } catch (err) {
+      return {
+        title: 'Calculation Error',
+        value: '₹0',
+        formula: 'Invalid input parameters',
+        details: [],
+      };
     }
   };
 
@@ -462,40 +486,43 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <SeoHead
-        title={`${toolTitle} – 100% Free Online Calculator | WevePrint`}
+        title={`${toolTitle} – Free Online Financial Calculator | WevePrint`}
         description={toolDescription}
         canonicalUrl={`https://weveprint.netlify.app/tools/${toolId}`}
       />
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col justify-between">
-        
-        {/* Header */}
-        <div className="space-y-4">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-10 space-y-8">
+        {/* Header Navigation */}
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <Link
             to="/tools"
-            className="inline-flex items-center space-x-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="inline-flex items-center space-x-2 text-xs font-extrabold text-cyan-400 hover:text-cyan-300 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to All Tools</span>
           </Link>
-
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-extrabold shadow-sm">
-              <Calculator className="w-4 h-4 text-cyan-400" />
-              <span>100% Client-Side Calculator</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              {toolTitle}
-            </h1>
-            <p className="text-slate-400 text-xs sm:text-sm max-w-2xl">
-              {toolDescription}
-            </p>
-          </div>
+          <span className="text-xs font-mono text-slate-500 uppercase tracking-widest">
+            100% Client-Side Calculator
+          </span>
         </div>
 
-        {/* WORKSPACE GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start my-6">
+        {/* Title */}
+        <div className="space-y-2 text-center max-w-2xl mx-auto">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-bold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Financial &amp; Math Utility</span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            {toolTitle}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            {toolDescription}
+          </p>
+        </div>
+
+        {/* Workspace: Inputs & Live Results */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           
           {/* Left Inputs Panel */}
           <div className="lg:col-span-2 glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6">
@@ -515,7 +542,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={percRate}
-                      onChange={(e) => setPercRate(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setPercRate)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -524,7 +551,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={percNum}
-                      onChange={(e) => setPercNum(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setPercNum)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -576,7 +603,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={loanAmount}
-                      onChange={(e) => setLoanAmount(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setLoanAmount)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -586,7 +613,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                       type="number"
                       step="0.1"
                       value={loanInterest}
-                      onChange={(e) => setLoanInterest(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setLoanInterest)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -595,7 +622,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={loanTenureYears}
-                      onChange={(e) => setLoanTenureYears(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setLoanTenureYears)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -610,7 +637,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={gstAmount}
-                      onChange={(e) => setGstAmount(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setGstAmount)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -618,13 +645,13 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <label className="text-xs font-bold text-slate-300 block mb-1">GST Rate (%):</label>
                     <select
                       value={gstRate}
-                      onChange={(e) => setGstRate(parseFloat(e.target.value))}
+                      onChange={(e) => setGstRate(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     >
-                      <option value={5}>5%</option>
-                      <option value={12}>12%</option>
-                      <option value={18}>18%</option>
-                      <option value={28}>28%</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18">18%</option>
+                      <option value="28">28%</option>
                     </select>
                   </div>
                   <div>
@@ -663,7 +690,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={costPrice}
-                      onChange={(e) => setCostPrice(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setCostPrice)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -672,7 +699,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={sellingPrice}
-                      onChange={(e) => setSellingPrice(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSellingPrice)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -687,7 +714,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={siPrincipal}
-                      onChange={(e) => setSiPrincipal(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSiPrincipal)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -697,7 +724,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                       type="number"
                       step="0.1"
                       value={siRate}
-                      onChange={(e) => setSiRate(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSiRate)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -706,14 +733,60 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={siTime}
-                      onChange={(e) => setSiTime(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSiTime)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                 </>
               )}
 
-              {/* 9. SIP Calculator */}
+              {/* 8. Compound Interest */}
+              {toolId === 'compound-interest-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Principal Amount (₹):</label>
+                    <input
+                      type="number"
+                      value={ciPrincipal}
+                      onChange={createNumHandler(setCiPrincipal)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Annual Interest Rate (%):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={ciRate}
+                      onChange={createNumHandler(setCiRate)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Time Period (Years):</label>
+                    <input
+                      type="number"
+                      value={ciTime}
+                      onChange={createNumHandler(setCiTime)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Compounding Frequency:</label>
+                    <select
+                      value={ciFrequency}
+                      onChange={(e) => setCiFrequency(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    >
+                      <option value="1">Yearly (1/Yr)</option>
+                      <option value="4">Quarterly (4/Yr)</option>
+                      <option value="12">Monthly (12/Yr)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {/* 9. SIP */}
               {toolId === 'sip-calculator' && (
                 <>
                   <div>
@@ -721,7 +794,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={sipMonthly}
-                      onChange={(e) => setSipMonthly(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSipMonthly)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -731,7 +804,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                       type="number"
                       step="0.1"
                       value={sipRate}
-                      onChange={(e) => setSipRate(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSipRate)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -740,32 +813,41 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <input
                       type="number"
                       value={sipYears}
-                      onChange={(e) => setSipYears(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setSipYears)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                 </>
               )}
 
-              {/* General Fallback Inputs */}
-              {!['percentage-calculator', 'age-calculator', 'date-calculator', 'emi-calculator', 'gst-calculator', 'profit-loss-calculator', 'simple-interest-calculator', 'sip-calculator'].includes(toolId) && (
+              {/* 10. SWP */}
+              {toolId === 'swp-calculator' && (
                 <>
                   <div>
-                    <label className="text-xs font-bold text-slate-300 block mb-1">Investment / Principal Amount (₹):</label>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Total Investment Corpus (₹):</label>
                     <input
                       type="number"
-                      value={lumpAmount}
-                      onChange={(e) => setLumpAmount(parseFloat(e.target.value) || 0)}
+                      value={swpInvestment}
+                      onChange={createNumHandler(setSwpInvestment)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-300 block mb-1">Expected Rate of Return (%):</label>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Monthly Withdrawal Amount (₹):</label>
+                    <input
+                      type="number"
+                      value={swpWithdrawal}
+                      onChange={createNumHandler(setSwpWithdrawal)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Expected Return Rate (% p.a.):</label>
                     <input
                       type="number"
                       step="0.1"
-                      value={lumpRate}
-                      onChange={(e) => setLumpRate(parseFloat(e.target.value) || 0)}
+                      value={swpRate}
+                      onChange={createNumHandler(setSwpRate)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -773,8 +855,162 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                     <label className="text-xs font-bold text-slate-300 block mb-1">Tenure (Years):</label>
                     <input
                       type="number"
+                      value={swpYears}
+                      onChange={createNumHandler(setSwpYears)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 11. Lumpsum */}
+              {toolId === 'lumpsum-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">One-time Investment (₹):</label>
+                    <input
+                      type="number"
+                      value={lumpAmount}
+                      onChange={createNumHandler(setLumpAmount)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Expected Return Rate (% p.a.):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={lumpRate}
+                      onChange={createNumHandler(setLumpRate)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Time Period (Years):</label>
+                    <input
+                      type="number"
                       value={lumpYears}
-                      onChange={(e) => setLumpYears(parseFloat(e.target.value) || 0)}
+                      onChange={createNumHandler(setLumpYears)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 12. FD Calculator */}
+              {toolId === 'fd-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Total Principal Deposit (₹):</label>
+                    <input
+                      type="number"
+                      value={fdPrincipal}
+                      onChange={createNumHandler(setFdPrincipal)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Interest Rate (% p.a.):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={fdRate}
+                      onChange={createNumHandler(setFdRate)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Tenure (Years):</label>
+                    <input
+                      type="number"
+                      value={fdYears}
+                      onChange={createNumHandler(setFdYears)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 13. RD Calculator */}
+              {toolId === 'rd-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Monthly Installment (₹):</label>
+                    <input
+                      type="number"
+                      value={rdMonthly}
+                      onChange={createNumHandler(setRdMonthly)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Interest Rate (% p.a.):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={rdRate}
+                      onChange={createNumHandler(setRdRate)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Tenure (Years):</label>
+                    <input
+                      type="number"
+                      value={rdYears}
+                      onChange={createNumHandler(setRdYears)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* 14. PPF Calculator */}
+              {toolId === 'ppf-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Yearly Contribution (Max ₹1.5 Lakh):</label>
+                    <input
+                      type="number"
+                      value={ppfYearly}
+                      onChange={createNumHandler(setPpfYearly)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-semibold">
+                    Govt PPF Interest Rate: <strong>7.1% p.a.</strong> (15 Years Lock-in)
+                  </div>
+                </>
+              )}
+
+              {/* 15. NPS Calculator */}
+              {toolId === 'nps-calculator' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Monthly Contribution (₹):</label>
+                    <input
+                      type="number"
+                      value={npsMonthly}
+                      onChange={createNumHandler(setNpsMonthly)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Current Age (Years):</label>
+                    <input
+                      type="number"
+                      value={npsCurrentAge}
+                      onChange={createNumHandler(setNpsCurrentAge)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Expected Return Rate (% p.a.):</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={npsReturnRate}
+                      onChange={createNumHandler(setNpsReturnRate)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm focus:border-cyan-500 focus:outline-none"
                     />
                   </div>
@@ -802,26 +1038,27 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
                   </p>
                 </div>
 
-                <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3">
-                  <h4 className="text-xs font-extrabold text-slate-300 uppercase tracking-wider border-b border-slate-800 pb-2">
-                    Detailed Breakdown
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    Breakdown Summary
                   </h4>
-                  <div className="divide-y divide-slate-800/60 space-y-2">
+                  <div className="divide-y divide-slate-800/80 border border-slate-800 rounded-xl overflow-hidden bg-slate-900/50">
                     {result.details.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs pt-2">
-                        <span className="text-slate-400 font-medium">{item.label}</span>
-                        <span className="font-extrabold text-white font-mono">{item.val}</span>
+                      <div key={idx} className="flex justify-between px-4 py-3 text-xs font-semibold">
+                        <span className="text-slate-400">{item.label}</span>
+                        <span className="text-white font-bold">{item.val}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-500 text-xs">
-                Enter valid inputs on the left to calculate results.
+              <div className="text-center py-12 text-slate-500 text-xs font-bold">
+                Enter parameters to see calculated results.
               </div>
             )}
           </div>
+
         </div>
 
         <div className="space-y-2 pt-4">
