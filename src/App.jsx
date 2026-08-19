@@ -11,6 +11,7 @@ import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Disclaimer from './pages/Disclaimer';
+import BlogPage from './pages/BlogPage';
 
 // PDF Tools Pages
 import PdfToolsHub from './pages/PdfToolsHub';
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-conditions" element={<TermsConditions />} />
       <Route path="/disclaimer" element={<Disclaimer />} />
+      <Route path="/blog" element={<BlogPage />} />
 
       {/* PDF Tools Hub & Individual Tools */}
       <Route path="/tools" element={<PdfToolsHub />} />

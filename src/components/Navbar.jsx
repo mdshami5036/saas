@@ -15,7 +15,8 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
 
   const navLinks = [
     { label: 'Home', path: '/' },
-    { label: 'PDF Tools', path: '/tools' },
+    { label: 'Tools', path: '/tools' },
+    { label: 'Blog', path: '/blog' },
     { label: 'About Us', path: '/about' },
     { label: 'Contact', path: '/contact' },
   ];

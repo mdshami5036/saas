@@ -168,8 +168,6 @@ export default function GenericPdfTool({
         {/* STATE 2: WORKSPACE SCREEN */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            <AllToolsTopAd />
-
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
               <div className="lg:col-span-3 glass-card p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -221,6 +219,11 @@ export default function GenericPdfTool({
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-2 pt-4">
+              <AllToolsTopAd />
+              <AllToolsBottomAd />
             </div>
           </div>
         )}

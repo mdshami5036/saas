@@ -23,7 +23,8 @@ import {
   DollarSign,
   Layers,
   Heart,
-  Mail
+  Mail,
+  Calculator
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -252,6 +253,99 @@ export default function LandingPage() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+         WEVEPRINT 50+ FREE WEB TOOLS ECOSYSTEM
+      ════════════════════════════════════════════════════════════════ */}
+      <section style={{ position: 'relative', zIndex: 1, padding: '60px 24px 80px', background: 'rgba(56,189,248,0.02)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: 50 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 30, background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', marginBottom: 16 }}>
+              <Sparkles size={14} color="#38bdf8" />
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#38bdf8', letterSpacing: '0.1em', uppercase: true }}>100% FREE CLIENT-SIDE SUITE</span>
+            </div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, fontFamily: "'Outfit', sans-serif", margin: '0 0 16px' }}>
+              Explore 50+ Free Web Tools Built for Speed &amp; Privacy
+            </h2>
+            <p style={{ fontSize: 16, color: '#94a3b8', maxWidth: '700px', margin: '0 auto', lineHeight: 1.6 }}>
+              All tools run 100% locally in your web browser. No cloud upload, no data logging, no file size restrictions.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+            
+            {/* Category 1: PDF Tools */}
+            <Link to="/tools" className="glass-card" style={{ borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', textDecoration: 'none', transition: 'all 0.3s' }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'linear-gradient(135deg, #ef4444, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 20px rgba(239, 68, 68, 0.3)' }}>
+                  <Layers size={24} color="#ffffff" />
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '0 0 8px' }}>PDF Tools</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                  Merge PDF, Split PDF, Remove Pages, Extract Pages, Organize, Compress, Repair &amp; PDF Converters.
+                </p>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>Explore 18 PDF Tools</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            {/* Category 2: Image Tools */}
+            <Link to="/tools" className="glass-card" style={{ borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', textDecoration: 'none', transition: 'all 0.3s' }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'linear-gradient(135deg, #06b6d4, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 20px rgba(6, 182, 212, 0.3)' }}>
+                  <Image size={24} color="#ffffff" />
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '0 0 8px' }}>Image Tools</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                  Image Compressor, Resizer, Format Converter, Merge Images, Background Remover, Enhancer &amp; Watermark.
+                </p>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>Explore 12 Image Tools</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            {/* Category 3: QR Code Tools */}
+            <Link to="/tools" className="glass-card" style={{ borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', textDecoration: 'none', transition: 'all 0.3s' }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)' }}>
+                  <QrCode size={24} color="#ffffff" />
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '0 0 8px' }}>QR Code Tools</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                  QR Generator, Scanner, Decoder, WiFi QR, UPI Payment QR, WhatsApp Chat QR, vCard &amp; Logo QR.
+                </p>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>Explore 12 QR Code Tools</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+            {/* Category 4: Calculator Tools */}
+            <Link to="/tools" className="glass-card" style={{ borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyBetween: 'space-between', textDecoration: 'none', transition: 'all 0.3s' }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3)' }}>
+                  <Calculator size={24} color="#ffffff" />
+                </div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '0 0 8px' }}>Calculators</h3>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                  Percentage, Age, Date, EMI, GST, Profit &amp; Loss, Compound Interest, SIP, SWP, FD, RD &amp; PPF.
+                </p>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>Explore 15 Calculators</span>
+                <ArrowRight size={16} />
+              </div>
+            </Link>
+
+          </div>
         </div>
       </section>
 

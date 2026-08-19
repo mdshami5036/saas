@@ -222,8 +222,6 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
           </div>
         </div>
 
-        <QrTopAd />
-
         {/* WORKSPACE GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start my-6">
           
@@ -544,7 +542,10 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
           </div>
         </div>
 
-        <QrBottomAd />
+        <div className="space-y-2 pt-4">
+          <QrTopAd />
+          <QrBottomAd />
+        </div>
       </main>
     </div>
   );

@@ -537,8 +537,6 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         {/* STATE 2: WORKSPACE SCREEN */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            <ImageTopAd />
-
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
               
               {/* Left Workspace: Preview Card */}
@@ -765,6 +763,12 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                   </div>
                 )}
 
+                {toolId === 'merge-images' && files.length < 2 && (
+                  <div className="p-3 rounded-xl bg-amber-950/80 border border-amber-800 text-amber-300 text-xs font-bold">
+                    ⚠️ Please select at least 2 images to merge together.
+                  </div>
+                )}
+
                 {errorMsg && (
                   <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs font-bold">
                     ⚠️ {errorMsg}
@@ -773,12 +777,18 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
 
                 <button
                   onClick={executeProcessing}
-                  className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-xl shadow-cyan-500/25 active:scale-95 flex items-center justify-center space-x-2"
+                  disabled={toolId === 'merge-images' && files.length < 2}
+                  className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-xl shadow-cyan-500/25 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <span>Process Image</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-2 pt-4">
+              <ImageTopAd />
+              <ImageBottomAd />
             </div>
           </div>
         )}
