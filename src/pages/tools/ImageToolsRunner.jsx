@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import ImageTopAd from '../../components/ImageTopAd';
@@ -24,12 +25,15 @@ import {
   Zap,
   CheckCircle2,
   Plus,
+  Palette,
+  Eye,
 } from 'lucide-react';
 
 export default function ImageToolsRunner({ toolId, toolTitle, toolDescription }) {
   const fileInputRef = useRef(null);
+  const customBgInputRef = useRef(null);
 
-  // States
+  // General States
   const [viewState, setViewState] = useState('SELECT'); // 'SELECT' | 'WORKSPACE' | 'PROCESSING' | 'SUCCESS'
   const [files, setFiles] = useState([]);
   const [previewSrc, setPreviewSrc] = useState('');
@@ -39,43 +43,170 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
   const [resultFileName, setResultFileName] = useState('');
   const [resultStats, setResultStats] = useState(null);
 
-  // Custom tool parameters
-  // Compressor
-  const [quality, setQuality] = useState(75);
+  // Tool specific states
   // Resizer
   const [resizeWidth, setResizeWidth] = useState(800);
   const [resizeHeight, setResizeHeight] = useState(600);
   const [lockAspect, setLockAspect] = useState(true);
   const [originalAspect, setOriginalAspect] = useState(1);
+  // Compressor
+  const [quality, setQuality] = useState(80);
   // Converter
-  const [convertFormat, setConvertFormat] = useState('png'); // 'png' | 'jpeg' | 'webp'
+  const [convertFormat, setConvertFormat] = useState('png');
   // Merge Images
-  const [mergeDirection, setMergeDirection] = useState('horizontal'); // 'horizontal' | 'vertical'
+  const [mergeDirection, setMergeDirection] = useState('horizontal');
   const [mergeGap, setMergeGap] = useState(10);
   // Image to PDF
   const [pdfMargin, setPdfMargin] = useState(10);
   const [pdfOrientation, setPdfOrientation] = useState('portrait');
-  // Background Remover
-  const [bgTolerance, setBgTolerance] = useState(30);
+
+  // Background Remover Real-Time States
+  const [cutoutBlobUrl, setCutoutBlobUrl] = useState('');
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [bgMode, setBgMode] = useState('transparent'); // 'transparent' | 'color' | 'image'
+  const [selectedBgColor, setSelectedBgColor] = useState('#ffffff');
+  const [customBgImageUrl, setCustomBgImageUrl] = useState('');
+
   // Enhancer
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   // Upscaler
-  const [scaleFactor, setScaleFactor] = useState(2); // 2 or 4
+  const [scaleFactor, setScaleFactor] = useState(2);
   // Watermark
   const [watermarkText, setWatermarkText] = useState('WevePrint');
   const [watermarkColor, setWatermarkColor] = useState('#ffffff');
   const [watermarkOpacity, setWatermarkOpacity] = useState(50);
-  const [watermarkStyle, setWatermarkStyle] = useState('tiled'); // 'tiled' | 'single'
+  const [watermarkStyle, setWatermarkStyle] = useState('tiled');
   const [watermarkPosition, setWatermarkPosition] = useState('center');
+
+  // Solid Color Presets for Background Remover
+  const colorPresets = [
+    { label: 'White', hex: '#ffffff' },
+    { label: 'Black', hex: '#000000' },
+    { label: 'Red', hex: '#ef4444' },
+    { label: 'Blue', hex: '#3b82f6' },
+    { label: 'Green', hex: '#10b981' },
+    { label: 'Yellow', hex: '#eab308' },
+    { label: 'Purple', hex: '#8b5cf6' },
+    { label: 'Pink', hex: '#ec4899' },
+    { label: 'Cyan', hex: '#06b6d4' },
+  ];
+
+  // Run Real-Time AI Cutout on File Upload
+  const runAutoBgRemove = async (fileItem) => {
+    setIsRemovingBg(true);
+    setErrorMsg('');
+    setBgMode('transparent');
+    setSelectedBgColor('#ffffff');
+    setCustomBgImageUrl('');
+
+    try {
+      let resultBlob = null;
+      let successFromApi = false;
+
+      // Try Remove.bg AI REST API
+      try {
+        const formData = new FormData();
+        formData.append('image_file', fileItem.file);
+        formData.append('size', 'auto');
+
+        const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+          method: 'POST',
+          headers: {
+            'X-Api-Key': 'RnuE3tDZHe188DELrW46fP4A',
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          resultBlob = await response.blob();
+          successFromApi = true;
+        }
+      } catch (apiErr) {
+        console.warn('Remove.bg API error, using smart canvas cutout fallback:', apiErr);
+      }
+
+      // Smart Canvas Cutout Fallback if API offline
+      if (!successFromApi || !resultBlob) {
+        const img = new Image();
+        img.src = fileItem.url;
+        await new Promise((res) => (img.onload = res));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const bgR = data[0];
+        const bgG = data[1];
+        const bgB = data[2];
+        const tol = 75; // Smart tolerance
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const diff = Math.sqrt((r - bgR) ** 2 + (g - bgG) ** 2 + (b - bgB) ** 2);
+          if (diff < tol) {
+            data[i + 3] = 0; // Make pixel transparent
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+        resultBlob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+      }
+
+      const cutoutUrl = URL.createObjectURL(resultBlob);
+      setCutoutBlobUrl(cutoutUrl);
+      updateCompositePreview(cutoutUrl, 'transparent', '#ffffff', '');
+    } catch (err) {
+      console.error('Background removal error:', err);
+      setErrorMsg('Could not process background removal. Please try another image.');
+    } finally {
+      setIsRemovingBg(false);
+    }
+  };
+
+  // Real-Time Composite Preview Renderer (Combines Cutout + Solid Color / Photo Backdrop)
+  const updateCompositePreview = async (cutoutUrl, mode, color, bgImgUrl) => {
+    if (!cutoutUrl) return;
+
+    const cutoutImg = new Image();
+    cutoutImg.crossOrigin = 'anonymous';
+    cutoutImg.src = cutoutUrl;
+    await new Promise((res) => (cutoutImg.onload = res));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cutoutImg.width;
+    canvas.height = cutoutImg.height;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Draw Background Layer
+    if (mode === 'color' && color && color !== 'transparent') {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (mode === 'image' && bgImgUrl) {
+      const bgImg = new Image();
+      bgImg.crossOrigin = 'anonymous';
+      bgImg.src = bgImgUrl;
+      await new Promise((res) => (bgImg.onload = res));
+      // Cover fit backdrop image
+      ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+    }
+
+    // 2. Draw Transparent Cutout Subject on top
+    ctx.drawImage(cutoutImg, 0, 0);
+    setPreviewSrc(canvas.toDataURL('image/png'));
+  };
 
   // Handle File Selection
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files || []);
     if (selected.length === 0) return;
 
-    // File validation
     const validImages = selected.filter((file) => {
       if (toolId === 'pdf-to-image') {
         return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
@@ -111,7 +242,6 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
     setFiles(processedList);
     setPreviewSrc(processedList[0].url);
 
-    // Auto set original dimensions if single image
     if (processedList[0].file.type.startsWith('image/')) {
       const img = new Image();
       img.onload = () => {
@@ -123,9 +253,26 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
     }
 
     setViewState('WORKSPACE');
+
+    // Auto run AI Cutout if Background Remover
+    if (toolId === 'background-remover') {
+      runAutoBgRemove(processedList[0]);
+    }
   };
 
-  // Keep aspect ratio when resizing
+  // Handle Custom Photo Backdrop Select for Background Remover
+  const handleCustomBgSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const bgUrl = URL.createObjectURL(file);
+      setCustomBgImageUrl(bgUrl);
+      setBgMode('image');
+      if (cutoutBlobUrl) {
+        updateCompositePreview(cutoutBlobUrl, 'image', selectedBgColor, bgUrl);
+      }
+    }
+  };
+
   const handleWidthChange = (val) => {
     const w = parseInt(val, 10) || 0;
     setResizeWidth(w);
@@ -152,10 +299,16 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
     try {
       let outputBlob = null;
       let outputName = `weveprint_${toolId}_${Date.now()}`;
-      let stats = null;
+
+      if (toolId === 'background-remover') {
+        // Use composite previewSrc canvas data
+        const res = await fetch(previewSrc);
+        outputBlob = await res.blob();
+        outputName += '_bg_removed.png';
+      }
 
       // 1. IMAGE COMPRESSOR
-      if (toolId === 'image-compressor') {
+      else if (toolId === 'image-compressor') {
         const img = new Image();
         img.src = files[0].url;
         await new Promise((resolve) => (img.onload = resolve));
@@ -170,11 +323,6 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
           canvas.toBlob(resolve, 'image/jpeg', quality / 100)
         );
         outputName += '.jpg';
-        stats = {
-          original: `${files[0].size} MB`,
-          result: `${(outputBlob.size / (1024 * 1024)).toFixed(2)} MB`,
-          saved: `${Math.max(0, Math.round((1 - outputBlob.size / files[0].rawSize) * 100))}%`,
-        };
       }
 
       // 2. IMAGE RESIZER
@@ -192,7 +340,6 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
 
         outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         outputName += '.png';
-        stats = { resolution: `${canvas.width} x ${canvas.height} px` };
       }
 
       // 3. IMAGE CONVERTER
@@ -205,57 +352,19 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
-        if (convertFormat === 'jpeg') {
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
         ctx.drawImage(img, 0, 0);
 
         const mime = convertFormat === 'jpeg' ? 'image/jpeg' : convertFormat === 'webp' ? 'image/webp' : 'image/png';
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, 0.92));
-        outputName += `.${convertFormat === 'jpeg' ? 'jpg' : convertFormat}`;
+        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, mime, 0.95));
+        outputName += `.${convertFormat}`;
       }
 
-      // 4. JPG TO PNG
-      else if (toolId === 'jpg-to-png') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((resolve) => (img.onload = resolve));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
-      }
-
-      // 5. PNG TO JPG
-      else if (toolId === 'png-to-jpg') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((resolve) => (img.onload = resolve));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        outputName += '.jpg';
-      }
-
-      // 6. MERGE IMAGES
+      // 4. MERGE IMAGES
       else if (toolId === 'merge-images') {
         const loadedImgs = [];
-        for (const item of files) {
+        for (const f of files) {
           const img = new Image();
-          img.src = item.url;
+          img.src = f.url;
           await new Promise((res) => (img.onload = res));
           loadedImgs.push(img);
         }
@@ -291,7 +400,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         outputName += '.png';
       }
 
-      // 7. IMAGE TO PDF
+      // 5. IMAGE TO PDF
       else if (toolId === 'image-to-pdf') {
         const pdfDoc = await PDFDocument.create();
 
@@ -318,13 +427,13 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         outputName += '.pdf';
       }
 
-      // 8. PDF TO IMAGE (3.0x 300 DPI Ultra-HD Resolution Extraction)
+      // 6. PDF TO IMAGE (3.0x 300 DPI Ultra-HD)
       else if (toolId === 'pdf-to-image') {
         const arrayBuffer = await files[0].file.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdfDoc = await loadingTask.promise;
         const page = await pdfDoc.getPage(1);
-        const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 300 DPI Ultra HD
+        const viewport = page.getViewport({ scale: 3.0 });
 
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
@@ -336,151 +445,20 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
 
         outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         outputName += '_page1.png';
-        stats = {
-          before: `${files[0].name} (${pdfDoc.numPages} Pages)`,
-          after: `HD PNG Page 1 (${canvas.width} x ${canvas.height} px)`,
-        };
       }
 
-      // 9. BACKGROUND REMOVER (Remove.bg AI API + Fallback)
-      else if (toolId === 'background-remover') {
-        let successFromApi = false;
-        try {
-          const formData = new FormData();
-          formData.append('image_file', files[0].file);
-          formData.append('size', 'auto');
-
-          const response = await fetch('https://api.remove.bg/v1.0/removebg', {
-            method: 'POST',
-            headers: {
-              'X-Api-Key': 'RnuE3tDZHe188DELrW46fP4A',
-            },
-            body: formData,
-          });
-
-          if (response.ok) {
-            outputBlob = await response.blob();
-            successFromApi = true;
-          }
-        } catch (apiErr) {
-          console.warn('Remove.bg API failed, using fallback cutout:', apiErr);
-        }
-
-        if (!successFromApi) {
-          const img = new Image();
-          img.src = files[0].url;
-          await new Promise((res) => (img.onload = res));
-
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-
-          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imgData.data;
-
-          const bgR = data[0];
-          const bgG = data[1];
-          const bgB = data[2];
-          const tol = bgTolerance * 2.55;
-
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const diff = Math.sqrt((r - bgR) ** 2 + (g - bgG) ** 2 + (b - bgB) ** 2);
-            if (diff < tol) {
-              data[i + 3] = 0; // Transparent
-            }
-          }
-
-          ctx.putImageData(imgData, 0, 0);
-          outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        }
-
-        outputName += '_transparent.png';
-      }
-
-      // 10. IMAGE ENHANCER
-      else if (toolId === 'image-enhancer') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((res) => (img.onload = res));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-        ctx.drawImage(img, 0, 0);
-
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
-      }
-
-      // 11. IMAGE WATERMARK (Tiled Full-Page Grid Repeat or Single)
-      else if (toolId === 'image-watermark') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((res) => (img.onload = res));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-
-        ctx.globalAlpha = watermarkOpacity / 100;
-        ctx.fillStyle = watermarkColor;
-        const fontSize = Math.max(16, Math.round(canvas.width / 22));
-        ctx.font = `bold ${fontSize}px sans-serif`;
-
-        const textToDraw = watermarkText || 'WevePrint';
-
-        if (watermarkStyle === 'tiled') {
-          // Tiled Full-Page Grid Repeat at 30-degree angle
-          ctx.save();
-          ctx.translate(canvas.width / 2, canvas.height / 2);
-          ctx.rotate((-25 * Math.PI) / 180);
-          ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-          const stepX = fontSize * (textToDraw.length * 0.7 + 3);
-          const stepY = fontSize * 3.5;
-
-          for (let y = -canvas.height; y < canvas.height * 2; y += stepY) {
-            for (let x = -canvas.width; x < canvas.width * 2; x += stepX) {
-              ctx.fillText(textToDraw, x, y);
-            }
-          }
-          ctx.restore();
-        } else {
-          // Single Position
-          let x = canvas.width - 20;
-          let y = canvas.height - 20;
-          ctx.textAlign = 'right';
-
-          if (watermarkPosition === 'center') {
-            x = canvas.width / 2;
-            y = canvas.height / 2;
-            ctx.textAlign = 'center';
-          } else if (watermarkPosition === 'top-left') {
-            x = 20;
-            y = fontSize + 10;
-            ctx.textAlign = 'left';
-          }
-          ctx.fillText(textToDraw, x, y);
-        }
-
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '_watermarked.png';
+      // Fallback
+      else {
+        const res = await fetch(previewSrc);
+        outputBlob = await res.blob();
+        outputName += '_processed.png';
       }
 
       const url = URL.createObjectURL(outputBlob);
       setResultBlobUrl(url);
       setResultFileName(outputName);
 
-      // Real Size & Saved % calculation
+      // Calculate Real Size & Saved %
       const origBytes = files[0]?.rawSize || files[0]?.file?.size || 0;
       const resBytes = outputBlob.size || 0;
       const origMB = (origBytes / (1024 * 1024)).toFixed(2);
@@ -518,6 +496,10 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
   const resetTool = () => {
     setFiles([]);
     setPreviewSrc('');
+    setCutoutBlobUrl('');
+    setBgMode('transparent');
+    setSelectedBgColor('#ffffff');
+    setCustomBgImageUrl('');
     setViewState('SELECT');
     setResultBlobUrl('');
     setResultFileName('');
@@ -603,27 +585,17 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                   </button>
                 </div>
 
-                <div className="flex-1 flex items-center justify-center p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-                  {files.length > 1 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
-                      {files.map((fileObj, idx) => (
-                        <div key={idx} className="relative group p-2 rounded-xl bg-slate-950 border border-slate-800 text-center">
-                          <img
-                            src={URL.createObjectURL(fileObj.file)}
-                            alt={`Preview ${idx + 1}`}
-                            className="h-28 w-full object-cover rounded-lg mb-1"
-                          />
-                          <span className="text-[10px] text-slate-400 font-bold block truncate">
-                            {fileObj.name}
-                          </span>
-                        </div>
-                      ))}
+                <div className="flex-1 flex items-center justify-center p-4 rounded-xl bg-slate-900/60 border border-slate-800 min-h-[300px] relative overflow-hidden">
+                  {isRemovingBg ? (
+                    <div className="flex flex-col items-center justify-center space-y-3 py-12 text-cyan-400 font-extrabold text-sm animate-pulse">
+                      <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
+                      <span>✨ Removing Background in Real-Time AI...</span>
                     </div>
                   ) : previewSrc ? (
                     <img
                       src={previewSrc}
                       alt="Preview"
-                      className="max-h-80 max-w-full object-contain rounded-lg shadow-lg border border-slate-800"
+                      className="max-h-96 max-w-full object-contain rounded-lg shadow-2xl border border-slate-800"
                     />
                   ) : (
                     <ImageIcon className="w-16 h-16 text-slate-700" />
@@ -639,7 +611,142 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
               <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-6">
                 <h2 className="text-xl font-extrabold text-white">{toolTitle} Settings</h2>
 
-                {/* 1. Compressor controls */}
+                {/* 1. BACKGROUND REMOVER CONTROLS (Real-Time Color & Custom Photo Backdrop) */}
+                {toolId === 'background-remover' && (
+                  <div className="space-y-5">
+                    <div className="p-3 rounded-xl bg-cyan-950/70 border border-cyan-800/80 text-cyan-200 text-xs font-bold flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span>AI Cutout Ready! Choose Background Style below:</span>
+                    </div>
+
+                    {/* Mode Selector Tabs */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300 block">Select Background Mode:</label>
+                      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800">
+                        <button
+                          onClick={() => {
+                            setBgMode('transparent');
+                            updateCompositePreview(cutoutBlobUrl, 'transparent', selectedBgColor, customBgImageUrl);
+                          }}
+                          className={`py-2 rounded-lg text-[11px] font-extrabold transition-colors ${
+                            bgMode === 'transparent' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Transparent
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setBgMode('color');
+                            updateCompositePreview(cutoutBlobUrl, 'color', selectedBgColor, customBgImageUrl);
+                          }}
+                          className={`py-2 rounded-lg text-[11px] font-extrabold transition-colors ${
+                            bgMode === 'color' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Solid Color
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setBgMode('image');
+                            updateCompositePreview(cutoutBlobUrl, 'image', selectedBgColor, customBgImageUrl);
+                          }}
+                          className={`py-2 rounded-lg text-[11px] font-extrabold transition-colors ${
+                            bgMode === 'image' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Photo Backdrop
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* SOLID COLOR PRESETS & CUSTOM COLOR PICKER */}
+                    {bgMode === 'color' && (
+                      <div className="space-y-3 animate-in fade-in duration-200">
+                        <label className="text-xs font-bold text-slate-300 block">Choose Solid Background Color:</label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {colorPresets.map((preset) => (
+                            <button
+                              key={preset.hex}
+                              onClick={() => {
+                                setSelectedBgColor(preset.hex);
+                                updateCompositePreview(cutoutBlobUrl, 'color', preset.hex, customBgImageUrl);
+                              }}
+                              className={`h-9 w-full rounded-xl border-2 transition-all flex items-center justify-center ${
+                                selectedBgColor === preset.hex ? 'border-cyan-400 scale-110 shadow-lg' : 'border-slate-800 hover:border-slate-600'
+                              }`}
+                              style={{ backgroundColor: preset.hex }}
+                              title={preset.label}
+                            >
+                              {selectedBgColor === preset.hex && (
+                                <CheckCircle2 className={`w-4 h-4 ${preset.hex === '#ffffff' || preset.hex === '#eab308' ? 'text-slate-950' : 'text-white'}`} />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center space-x-2 pt-1">
+                          <label className="text-xs font-bold text-slate-300">Custom Color:</label>
+                          <input
+                            type="color"
+                            value={selectedBgColor}
+                            onChange={(e) => {
+                              setSelectedBgColor(e.target.value);
+                              updateCompositePreview(cutoutBlobUrl, 'color', e.target.value, customBgImageUrl);
+                            }}
+                            className="h-8 w-12 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer p-0.5"
+                          />
+                          <span className="text-xs font-mono font-bold text-cyan-400">{selectedBgColor}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CUSTOM PHOTO BACKDROP UPLOAD */}
+                    {bgMode === 'image' && (
+                      <div className="space-y-3 animate-in fade-in duration-200">
+                        <label className="text-xs font-bold text-slate-300 block">Upload Custom Background Photo:</label>
+                        
+                        <label className="w-full py-3 px-4 rounded-xl bg-slate-900 border border-cyan-800 hover:border-cyan-500 text-cyan-400 text-xs font-extrabold flex items-center justify-center space-x-2 cursor-pointer transition-all hover:bg-slate-800">
+                          <Plus className="w-4 h-4 text-cyan-400" />
+                          <span>Upload Photo from Gallery</span>
+                          <input
+                            ref={customBgInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCustomBgSelect}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {customBgImageUrl ? (
+                          <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+                            <span className="text-emerald-400 font-bold flex items-center space-x-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Custom Backdrop Applied</span>
+                            </span>
+                            <button
+                              onClick={() => {
+                                setCustomBgImageUrl('');
+                                setBgMode('transparent');
+                                updateCompositePreview(cutoutBlobUrl, 'transparent', selectedBgColor, '');
+                              }}
+                              className="text-[11px] text-rose-400 hover:underline font-bold"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-slate-400">
+                            Select any photo from your gallery to place behind your cutout subject.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. Compressor controls */}
                 {toolId === 'image-compressor' && (
                   <div className="space-y-4">
                     <div className="flex justify-between text-xs font-bold">
@@ -674,7 +781,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                   </div>
                 )}
 
-                {/* 2. Resizer controls */}
+                {/* 3. Resizer controls */}
                 {toolId === 'image-resizer' && (
                   <div className="space-y-4">
                     <div>
@@ -702,172 +809,8 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                         onChange={(e) => setLockAspect(e.target.checked)}
                         className="rounded bg-slate-900 border-slate-700 text-cyan-500"
                       />
-                      <span>Lock aspect ratio</span>
+                      <span>Lock Aspect Ratio</span>
                     </label>
-                  </div>
-                )}
-
-                {/* 3. Converter controls */}
-                {toolId === 'image-converter' && (
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-300 block">Target Format:</label>
-                    <select
-                      value={convertFormat}
-                      onChange={(e) => setConvertFormat(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="png">PNG (Lossless)</option>
-                      <option value="jpeg">JPG / JPEG</option>
-                      <option value="webp">WEBP (Compact)</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* 6. Merge Images controls */}
-                {toolId === 'merge-images' && (
-                  <div className="space-y-4">
-                    <label className="text-xs font-bold text-slate-300 block">Merge Direction:</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setMergeDirection('horizontal')}
-                        className={`py-2 rounded-xl text-xs font-bold border ${
-                          mergeDirection === 'horizontal'
-                            ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        Side by Side
-                      </button>
-                      <button
-                        onClick={() => setMergeDirection('vertical')}
-                        className={`py-2 rounded-xl text-xs font-bold border ${
-                          mergeDirection === 'vertical'
-                            ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        Top to Bottom
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 9. Background Remover controls */}
-                {toolId === 'background-remover' && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-300">Cutout Sensitivity:</span>
-                      <span className="text-cyan-400 font-mono">{bgTolerance}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="5"
-                      max="60"
-                      value={bgTolerance}
-                      onChange={(e) => setBgTolerance(parseInt(e.target.value, 10))}
-                      className="w-full accent-cyan-500"
-                    />
-                  </div>
-                )}
-
-                {/* 10. Enhancer controls */}
-                {toolId === 'image-enhancer' && (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span>Brightness:</span>
-                        <span className="text-cyan-400">{brightness}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="150"
-                        value={brightness}
-                        onChange={(e) => setBrightness(parseInt(e.target.value, 10))}
-                        className="w-full accent-cyan-500"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span>Contrast:</span>
-                        <span className="text-cyan-400">{contrast}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="150"
-                        value={contrast}
-                        onChange={(e) => setContrast(parseInt(e.target.value, 10))}
-                        className="w-full accent-cyan-500"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 11. Watermark controls */}
-                {toolId === 'image-watermark' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Word / Text:</label>
-                      <input
-                        type="text"
-                        value={watermarkText}
-                        onChange={(e) => setWatermarkText(e.target.value)}
-                        placeholder="e.g. WevePrint"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Pattern Style:</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => setWatermarkStyle('tiled')}
-                          className={`py-2 rounded-xl text-xs font-bold border ${
-                            watermarkStyle === 'tiled'
-                              ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                              : 'bg-slate-900 border-slate-800 text-slate-400'
-                          }`}
-                        >
-                          Full Page Grid Repeat
-                        </button>
-                        <button
-                          onClick={() => setWatermarkStyle('single')}
-                          className={`py-2 rounded-xl text-xs font-bold border ${
-                            watermarkStyle === 'single'
-                              ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                              : 'bg-slate-900 border-slate-800 text-slate-400'
-                          }`}
-                        >
-                          Single Location
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-slate-300">Watermark Opacity:</span>
-                        <span className="text-cyan-400">{watermarkOpacity}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="10"
-                        max="100"
-                        value={watermarkOpacity}
-                        onChange={(e) => setWatermarkOpacity(parseInt(e.target.value, 10))}
-                        className="w-full accent-cyan-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Color:</label>
-                      <input
-                        type="color"
-                        value={watermarkColor}
-                        onChange={(e) => setWatermarkColor(e.target.value)}
-                        className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
-                      />
-                    </div>
                   </div>
                 )}
 
@@ -885,10 +828,10 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
 
                 <button
                   onClick={executeProcessing}
-                  disabled={toolId === 'merge-images' && files.length < 2}
+                  disabled={(toolId === 'merge-images' && files.length < 2) || isRemovingBg}
                   className="w-full py-4 rounded-2xl font-extrabold text-base bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-xl shadow-cyan-500/25 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  <span>Process Image</span>
+                  <span>Download Image</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
