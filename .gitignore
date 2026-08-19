@@ -22,7 +22,8 @@ Dockerfile
 railway.json
 start.sh
 docker-compose.yml
-docs/
+# Ignore root docs folder
+/docs/
 
 # Logs & Temporary Files
 *.log
