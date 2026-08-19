@@ -68,8 +68,9 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
   // Maps
   const [mapLocation, setMapLocation] = useState('https://maps.google.com/?q=28.6139,77.2090');
 
-  // Social
-  const [socialInsta, setSocialInsta] = useState('https://instagram.com/weveprint');
+  // Social Media Platform & Username
+  const [socialPlatform, setSocialPlatform] = useState('instagram');
+  const [socialUsername, setSocialUsername] = useState('weveprint');
 
   // Custom QR / Colors / Logo
   const [fgColor, setFgColor] = useState('#040914');
@@ -102,7 +103,17 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
       return mapLocation;
     }
     if (toolId === 'social-qr' || toolId === 'social-media-qr') {
-      return socialInsta;
+      const handle = socialUsername.replace(/^@/, '').trim();
+      if (socialPlatform === 'instagram') return `https://instagram.com/${handle}`;
+      if (socialPlatform === 'facebook') return `https://facebook.com/${handle}`;
+      if (socialPlatform === 'twitter') return `https://x.com/${handle}`;
+      if (socialPlatform === 'telegram') return `https://t.me/${handle}`;
+      if (socialPlatform === 'youtube') return `https://youtube.com/@${handle}`;
+      if (socialPlatform === 'linkedin') return `https://linkedin.com/in/${handle}`;
+      if (socialPlatform === 'whatsapp') return `https://wa.me/${handle}`;
+      if (socialPlatform === 'snapchat') return `https://snapchat.com/add/${handle}`;
+      if (socialPlatform === 'pinterest') return `https://pinterest.com/${handle}`;
+      return `https://instagram.com/${handle}`;
     }
     return textInput || 'https://weveprint.netlify.app';
   };
@@ -453,6 +464,41 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
                     value={mapLocation}
                     onChange={(e) => setMapLocation(e.target.value)}
                     placeholder="https://maps.google.com/?q=latitude,longitude"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 7. Social Media QR Code */}
+            {['social-qr', 'social-media-qr'].includes(toolId) && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Choose Social Media Platform:</label>
+                  <select
+                    value={socialPlatform}
+                    onChange={(e) => setSocialPlatform(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-xs focus:border-cyan-500 focus:outline-none"
+                  >
+                    <option value="instagram">Instagram (https://instagram.com/username)</option>
+                    <option value="facebook">Facebook (https://facebook.com/username)</option>
+                    <option value="twitter">Twitter / X (https://x.com/username)</option>
+                    <option value="telegram">Telegram Channel (https://t.me/username)</option>
+                    <option value="youtube">YouTube (https://youtube.com/@username)</option>
+                    <option value="linkedin">LinkedIn (https://linkedin.com/in/username)</option>
+                    <option value="whatsapp">WhatsApp Direct (https://wa.me/phone)</option>
+                    <option value="snapchat">Snapchat (https://snapchat.com/add/username)</option>
+                    <option value="pinterest">Pinterest (https://pinterest.com/username)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Profile Username / Handle / ID:</label>
+                  <input
+                    type="text"
+                    value={socialUsername}
+                    onChange={(e) => setSocialUsername(e.target.value)}
+                    placeholder="e.g. weveprint"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
                   />
                 </div>

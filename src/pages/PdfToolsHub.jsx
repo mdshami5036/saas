@@ -412,16 +412,6 @@ export default function PdfToolsHub() {
           link: '/tools/image-enhancer',
         },
         {
-          id: 'image-upscaler',
-          title: 'Image Upscaler',
-          description: 'Upscale low-resolution images 2x or 4x without losing quality.',
-          category: 'Images',
-          icon: Sparkles,
-          iconBg: 'bg-gradient-to-tr from-cyan-400 to-blue-600',
-          badge: 'HD',
-          link: '/tools/image-upscaler',
-        },
-        {
           id: 'image-watermark',
           title: 'Image Watermark',
           description: 'Add custom text or logo watermarks onto your photos for protection.',

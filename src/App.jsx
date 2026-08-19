@@ -87,7 +87,6 @@ export default function App() {
       <Route path="/tools/pdf-to-image" element={<ImageToolsRunner toolId="pdf-to-image" toolTitle="PDF to Image" toolDescription="Convert PDF document pages into high resolution PNG/JPG images." />} />
       <Route path="/tools/background-remover" element={<ImageToolsRunner toolId="background-remover" toolTitle="Background Remover" toolDescription="Remove background from images and make transparent PNG cutouts." />} />
       <Route path="/tools/image-enhancer" element={<ImageToolsRunner toolId="image-enhancer" toolTitle="Image Enhancer" toolDescription="Improve brightness, contrast, and clarity of your photos." />} />
-      <Route path="/tools/image-upscaler" element={<ImageToolsRunner toolId="image-upscaler" toolTitle="Image Upscaler" toolDescription="Upscale low-resolution images 2x or 4x without losing quality." />} />
       <Route path="/tools/image-watermark" element={<ImageToolsRunner toolId="image-watermark" toolTitle="Image Watermark" toolDescription="Add custom text or logo watermarks onto your photos for protection." />} />
 
       <Route path="/tools/extract-pages" element={<GenericPdfTool toolTitle="Extract Pages" toolDescription="Extract specific pages from your PDF document." actionButtonText="Extract Pages" />} />

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
 import ImageTopAd from '../../components/ImageTopAd';
@@ -64,8 +66,9 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
   // Watermark
   const [watermarkText, setWatermarkText] = useState('WevePrint');
   const [watermarkColor, setWatermarkColor] = useState('#ffffff');
-  const [watermarkOpacity, setWatermarkOpacity] = useState(80);
-  const [watermarkPosition, setWatermarkPosition] = useState('bottom-right');
+  const [watermarkOpacity, setWatermarkOpacity] = useState(50);
+  const [watermarkStyle, setWatermarkStyle] = useState('tiled'); // 'tiled' | 'single'
+  const [watermarkPosition, setWatermarkPosition] = useState('center');
 
   // Handle File Selection
   const handleFileSelect = (e) => {
@@ -309,57 +312,86 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         outputName += '.pdf';
       }
 
-      // 8. PDF TO IMAGE
+      // 8. PDF TO IMAGE (Real HD PDF Page Extraction)
       else if (toolId === 'pdf-to-image') {
-        // High compatibility PDF canvas rasterizer
+        const arrayBuffer = await files[0].file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdfDoc = await loadingTask.promise;
+        const page = await pdfDoc.getPage(1);
+        const viewport = page.getViewport({ scale: 2.0 }); // 2x HD Resolution
+
         const canvas = document.createElement('canvas');
-        canvas.width = 800;
-        canvas.height = 1000;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillText(`PDF Page Extracted: ${files[0].name}`, 50, 100);
+        await page.render({ canvasContext: ctx, viewport }).promise;
 
         outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
+        outputName += '_page1.png';
+        stats = {
+          before: `${files[0].name} (${pdfDoc.numPages} Pages)`,
+          after: `HD PNG Page 1 (${canvas.width} x ${canvas.height} px)`,
+        };
       }
 
-      // 9. BACKGROUND REMOVER
+      // 9. BACKGROUND REMOVER (Remove.bg AI API + Fallback)
       else if (toolId === 'background-remover') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((res) => (img.onload = res));
+        let successFromApi = false;
+        try {
+          const formData = new FormData();
+          formData.append('image_file', files[0].file);
+          formData.append('size', 'auto');
 
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
+          const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+            method: 'POST',
+            headers: {
+              'X-Api-Key': 'RnuE3tDZHe188DELrW46fP4A',
+            },
+            body: formData,
+          });
 
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-
-        // Color keying based on top-left pixel
-        const bgR = data[0];
-        const bgG = data[1];
-        const bgB = data[2];
-        const tol = bgTolerance * 2.55;
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const diff = Math.sqrt((r - bgR) ** 2 + (g - bgG) ** 2 + (b - bgB) ** 2);
-          if (diff < tol) {
-            data[i + 3] = 0; // Transparent
+          if (response.ok) {
+            outputBlob = await response.blob();
+            successFromApi = true;
           }
+        } catch (apiErr) {
+          console.warn('Remove.bg API failed, using fallback cutout:', apiErr);
         }
 
-        ctx.putImageData(imgData, 0, 0);
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
+        if (!successFromApi) {
+          const img = new Image();
+          img.src = files[0].url;
+          await new Promise((res) => (img.onload = res));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+
+          const bgR = data[0];
+          const bgG = data[1];
+          const bgB = data[2];
+          const tol = bgTolerance * 2.55;
+
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const diff = Math.sqrt((r - bgR) ** 2 + (g - bgG) ** 2 + (b - bgB) ** 2);
+            if (diff < tol) {
+              data[i + 3] = 0; // Transparent
+            }
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+          outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        }
+
+        outputName += '_transparent.png';
       }
 
       // 10. IMAGE ENHANCER
@@ -379,29 +411,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         outputName += '.png';
       }
 
-      // 11. IMAGE UPSCALER
-      else if (toolId === 'image-upscaler') {
-        const img = new Image();
-        img.src = files[0].url;
-        await new Promise((res) => (img.onload = res));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width * scaleFactor;
-        canvas.height = img.height * scaleFactor;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
-        stats = {
-          before: `${img.width} x ${img.height} px`,
-          after: `${canvas.width} x ${canvas.height} px (${scaleFactor}x HD)`,
-        };
-      }
-
-      // 12. IMAGE WATERMARK
+      // 11. IMAGE WATERMARK (Tiled Full-Page Grid Repeat or Single)
       else if (toolId === 'image-watermark') {
         const img = new Image();
         img.src = files[0].url;
@@ -413,29 +423,49 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
 
-        // Watermark Text
         ctx.globalAlpha = watermarkOpacity / 100;
         ctx.fillStyle = watermarkColor;
-        const fontSize = Math.max(16, Math.round(canvas.width / 25));
+        const fontSize = Math.max(16, Math.round(canvas.width / 22));
         ctx.font = `bold ${fontSize}px sans-serif`;
 
-        let x = canvas.width - 20;
-        let y = canvas.height - 20;
-        ctx.textAlign = 'right';
+        const textToDraw = watermarkText || 'WevePrint';
 
-        if (watermarkPosition === 'center') {
-          x = canvas.width / 2;
-          y = canvas.height / 2;
-          ctx.textAlign = 'center';
-        } else if (watermarkPosition === 'top-left') {
-          x = 20;
-          y = fontSize + 10;
-          ctx.textAlign = 'left';
+        if (watermarkStyle === 'tiled') {
+          // Tiled Full-Page Grid Repeat at 30-degree angle
+          ctx.save();
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate((-25 * Math.PI) / 180);
+          ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+          const stepX = fontSize * (textToDraw.length * 0.7 + 3);
+          const stepY = fontSize * 3.5;
+
+          for (let y = -canvas.height; y < canvas.height * 2; y += stepY) {
+            for (let x = -canvas.width; x < canvas.width * 2; x += stepX) {
+              ctx.fillText(textToDraw, x, y);
+            }
+          }
+          ctx.restore();
+        } else {
+          // Single Position
+          let x = canvas.width - 20;
+          let y = canvas.height - 20;
+          ctx.textAlign = 'right';
+
+          if (watermarkPosition === 'center') {
+            x = canvas.width / 2;
+            y = canvas.height / 2;
+            ctx.textAlign = 'center';
+          } else if (watermarkPosition === 'top-left') {
+            x = 20;
+            y = fontSize + 10;
+            ctx.textAlign = 'left';
+          }
+          ctx.fillText(textToDraw, x, y);
         }
 
-        ctx.fillText(watermarkText || 'WevePrint', x, y);
         outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        outputName += '.png';
+        outputName += '_watermarked.png';
       }
 
       const url = URL.createObjectURL(outputBlob);
@@ -588,7 +618,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
 
                 {/* 1. Compressor controls */}
                 {toolId === 'image-compressor' && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex justify-between text-xs font-bold">
                       <span className="text-slate-300">Target Quality:</span>
                       <span className="text-cyan-400 font-mono">{quality}%</span>
@@ -601,6 +631,19 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                       onChange={(e) => setQuality(parseInt(e.target.value, 10))}
                       className="w-full accent-cyan-500"
                     />
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
+                      <div className="flex justify-between text-slate-400 font-semibold">
+                        <span>Original Size:</span>
+                        <span className="text-white font-mono">{files[0]?.file ? (files[0].file.size / 1024).toFixed(1) : 0} KB</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-400 font-bold">
+                        <span>Est. Output Size:</span>
+                        <span className="font-mono">~{files[0]?.file ? ((files[0].file.size / 1024) * (quality / 100)).toFixed(1) : 0} KB</span>
+                      </div>
+                      <div className="text-[10px] text-cyan-400 font-bold text-right pt-1">
+                        Saves ~{100 - quality}% File Weight
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -734,45 +777,68 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                   </div>
                 )}
 
-                {/* 11. Upscaler controls */}
-                {toolId === 'image-upscaler' && (
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-slate-300 block">Upscale Scale:</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setScaleFactor(2)}
-                        className={`py-2 rounded-xl text-xs font-bold border ${
-                          scaleFactor === 2
-                            ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        2x (HD)
-                      </button>
-                      <button
-                        onClick={() => setScaleFactor(4)}
-                        className={`py-2 rounded-xl text-xs font-bold border ${
-                          scaleFactor === 4
-                            ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        4x (Ultra HD)
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 12. Watermark controls */}
+                {/* 11. Watermark controls */}
                 {toolId === 'image-watermark' && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Text:</label>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Word / Text:</label>
                       <input
                         type="text"
                         value={watermarkText}
                         onChange={(e) => setWatermarkText(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
+                        placeholder="e.g. WevePrint"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Pattern Style:</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setWatermarkStyle('tiled')}
+                          className={`py-2 rounded-xl text-xs font-bold border ${
+                            watermarkStyle === 'tiled'
+                              ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
+                              : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          Full Page Grid Repeat
+                        </button>
+                        <button
+                          onClick={() => setWatermarkStyle('single')}
+                          className={`py-2 rounded-xl text-xs font-bold border ${
+                            watermarkStyle === 'single'
+                              ? 'bg-cyan-950 border-cyan-500 text-cyan-400'
+                              : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          Single Location
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs font-bold mb-1">
+                        <span className="text-slate-300">Watermark Opacity:</span>
+                        <span className="text-cyan-400">{watermarkOpacity}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="100"
+                        value={watermarkOpacity}
+                        onChange={(e) => setWatermarkOpacity(parseInt(e.target.value, 10))}
+                        className="w-full accent-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Watermark Color:</label>
+                      <input
+                        type="color"
+                        value={watermarkColor}
+                        onChange={(e) => setWatermarkColor(e.target.value)}
+                        className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
                       />
                     </div>
                   </div>
