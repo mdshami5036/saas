@@ -98,10 +98,10 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
     if (toolId === 'vcard-qr') {
       return `BEGIN:VCARD\nVERSION:3.0\nN:${vLastName};${vFirstName};;;\nFN:${vFirstName} ${vLastName}\nORG:${vOrg}\nTEL;TYPE=CELL:${vPhone}\nEMAIL:${vEmail}\nEND:VCARD`;
     }
-    if (toolId === 'maps-qr') {
+    if (toolId === 'maps-qr' || toolId === 'google-maps-qr') {
       return mapLocation;
     }
-    if (toolId === 'social-qr') {
+    if (toolId === 'social-qr' || toolId === 'social-media-qr') {
       return socialInsta;
     }
     return textInput || 'https://weveprint.netlify.app';
@@ -443,6 +443,59 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
               </div>
             )}
 
+            {/* 6. Google Maps QR Code */}
+            {['google-maps-qr', 'maps-qr'].includes(toolId) && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Google Maps Location Link / URL:</label>
+                  <input
+                    type="text"
+                    value={mapLocation}
+                    onChange={(e) => setMapLocation(e.target.value)}
+                    placeholder="https://maps.google.com/?q=latitude,longitude"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:border-cyan-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* QR Code Color & Logo Customization Controls */}
+            {!['qr-scanner', 'qr-decoder'].includes(toolId) && (
+              <div className="pt-4 border-t border-slate-800 space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Custom Colors &amp; Logo Overlay</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-300 block mb-1">QR Code Color:</label>
+                    <input
+                      type="color"
+                      value={fgColor}
+                      onChange={(e) => setFgColor(e.target.value)}
+                      className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-300 block mb-1">Background Color:</label>
+                    <input
+                      type="color"
+                      value={bgColor}
+                      onChange={(e) => setBgColor(e.target.value)}
+                      className="w-full h-9 p-1 rounded-lg bg-slate-900 border border-slate-700 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1">Upload Central Logo (Optional):</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-cyan-400 hover:file:bg-slate-700"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* 6. Scanner & Decoder */}
             {['qr-scanner', 'qr-decoder'].includes(toolId) && (
               <div className="space-y-4">
@@ -543,7 +596,6 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
         </div>
 
         <div className="space-y-2 pt-4">
-          <QrTopAd />
           <QrBottomAd />
         </div>
       </main>

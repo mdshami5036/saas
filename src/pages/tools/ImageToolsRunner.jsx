@@ -551,7 +551,22 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                 </div>
 
                 <div className="flex-1 flex items-center justify-center p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-                  {previewSrc ? (
+                  {files.length > 1 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full">
+                      {files.map((fileObj, idx) => (
+                        <div key={idx} className="relative group p-2 rounded-xl bg-slate-950 border border-slate-800 text-center">
+                          <img
+                            src={URL.createObjectURL(fileObj.file)}
+                            alt={`Preview ${idx + 1}`}
+                            className="h-28 w-full object-cover rounded-lg mb-1"
+                          />
+                          <span className="text-[10px] text-slate-400 font-bold block truncate">
+                            {fileObj.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : previewSrc ? (
                     <img
                       src={previewSrc}
                       alt="Preview"
@@ -563,7 +578,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                 </div>
 
                 <div className="text-center text-xs font-bold text-slate-400">
-                  {files[0]?.name} ({files[0]?.size} MB)
+                  {files.length === 1 ? `${files[0]?.name} (${files[0]?.size} MB)` : `${files.length} images selected`}
                 </div>
               </div>
 
@@ -787,7 +802,6 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
             </div>
 
             <div className="space-y-2 pt-4">
-              <ImageTopAd />
               <ImageBottomAd />
             </div>
           </div>

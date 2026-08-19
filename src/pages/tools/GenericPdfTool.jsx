@@ -222,7 +222,6 @@ export default function GenericPdfTool({
             </div>
 
             <div className="space-y-2 pt-4">
-              <AllToolsTopAd />
               <AllToolsBottomAd />
             </div>
           </div>

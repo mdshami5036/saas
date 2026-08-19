@@ -825,7 +825,6 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
         </div>
 
         <div className="space-y-2 pt-4">
-          <CalculatorTopAd />
           <CalculatorBottomAd />
         </div>
       </main>

@@ -700,8 +700,35 @@ export default function PdfToolsHub() {
           </p>
         </div>
 
-        {/* AdSense Top Banner */}
-        <AllToolsTopAd />
+        {/* SEO Tools Requirements & Features Section */}
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6 bg-slate-900/40">
+          <div className="flex items-center space-x-2 text-cyan-400">
+            <Sparkles className="w-5 h-5" />
+            <h2 className="text-lg font-black tracking-wide text-white uppercase">
+              100% Client-Side Private PDF &amp; Web Tools Platform
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-300">
+            <div className="space-y-2">
+              <h3 className="font-bold text-white text-sm">🔒 Zero-Upload Privacy</h3>
+              <p className="leading-relaxed text-slate-400">
+                All document merging, page splitting, image compression, and calculations happen 100% locally on your browser. Your files never touch a remote server.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-bold text-white text-sm">⚡ Unlimited Speed &amp; Size</h3>
+              <p className="leading-relaxed text-slate-400">
+                No file size caps or queue waiting times. Process multi-megabyte PDFs and batch image conversions instantly at your device's native CPU speed.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-bold text-white text-sm">🎯 50+ Specialized Web Tools</h3>
+              <p className="leading-relaxed text-slate-400">
+                Spanning PDF editing (Merge, Split, Compress), Image manipulation (BG Remover, Converter, Resizer), Custom QR generation (UPI, Maps, WhatsApp), and 15 Financial Calculators.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Category Filter Pills */}
         <div className="flex items-center justify-center flex-wrap gap-2 pt-2">

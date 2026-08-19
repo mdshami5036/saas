@@ -348,7 +348,6 @@ export default function MergePdfTool() {
             </div>
 
             <div className="space-y-2 pt-4">
-              <MergePdfTopAd />
               <MergePdfBottomAd />
             </div>
           </div>
