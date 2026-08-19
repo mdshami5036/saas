@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
-import AllToolsTopAd from '../../components/AllToolsTopAd';
-import AllToolsBottomAd from '../../components/AllToolsBottomAd';
+import ImageTopAd from '../../components/ImageTopAd';
+import ImageBottomAd from '../../components/ImageBottomAd';
 import {
   Image as ImageIcon,
   UploadCloud,
@@ -530,14 +530,14 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
               </div>
             )}
 
-            <AllToolsBottomAd />
+            <ImageBottomAd />
           </div>
         )}
 
         {/* STATE 2: WORKSPACE SCREEN */}
         {viewState === 'WORKSPACE' && (
           <div className="flex-1 space-y-6 animate-in fade-in duration-300">
-            <AllToolsTopAd />
+            <ImageTopAd />
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
               
@@ -786,7 +786,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         {/* STATE 3: PROCESSING SCREEN */}
         {viewState === 'PROCESSING' && (
           <div className="flex-1 flex flex-col items-center justify-center py-20 text-center space-y-6 animate-in fade-in duration-300">
-            <AllToolsTopAd />
+            <ImageTopAd />
             <div className="space-y-4">
               <Loader2 className="w-16 h-16 text-cyan-400 animate-spin mx-auto" />
               <h2 className="text-2xl font-extrabold text-white tracking-tight">Processing Image...</h2>
@@ -827,7 +827,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
               </button>
             </div>
 
-            <AllToolsBottomAd />
+            <ImageBottomAd />
           </div>
         )}
       </main>

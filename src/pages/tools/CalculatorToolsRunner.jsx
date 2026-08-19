@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
-import AllToolsTopAd from '../../components/AllToolsTopAd';
-import AllToolsBottomAd from '../../components/AllToolsBottomAd';
+import CalculatorTopAd from '../../components/CalculatorTopAd';
+import CalculatorBottomAd from '../../components/CalculatorBottomAd';
 import {
   Calculator,
   ArrowLeft,
@@ -494,7 +494,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
           </div>
         </div>
 
-        <AllToolsTopAd />
+        <CalculatorTopAd />
 
         {/* WORKSPACE GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start my-6">
@@ -826,7 +826,7 @@ export default function CalculatorToolsRunner({ toolId, toolTitle, toolDescripti
           </div>
         </div>
 
-        <AllToolsBottomAd />
+        <CalculatorBottomAd />
       </main>
     </div>
   );

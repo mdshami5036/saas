@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import Navbar from '../../components/Navbar';
 import SeoHead from '../../components/SeoHead';
-import AllToolsTopAd from '../../components/AllToolsTopAd';
-import AllToolsBottomAd from '../../components/AllToolsBottomAd';
+import QrTopAd from '../../components/QrTopAd';
+import QrBottomAd from '../../components/QrBottomAd';
 import {
   QrCode,
   UploadCloud,
@@ -222,7 +222,7 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
           </div>
         </div>
 
-        <AllToolsTopAd />
+        <QrTopAd />
 
         {/* WORKSPACE GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start my-6">
@@ -544,7 +544,7 @@ export default function QrToolsRunner({ toolId, toolTitle, toolDescription }) {
           </div>
         </div>
 
-        <AllToolsBottomAd />
+        <QrBottomAd />
       </main>
     </div>
   );
