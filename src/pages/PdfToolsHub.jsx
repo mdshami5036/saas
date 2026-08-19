@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import SeoHead from '../components/SeoHead';
+import AllToolsTopAd from '../components/AllToolsTopAd';
+import AllToolsBottomAd from '../components/AllToolsBottomAd';
 import {
   Layers,
   Scissors,
@@ -698,6 +700,9 @@ export default function PdfToolsHub() {
           </p>
         </div>
 
+        {/* AdSense Top Banner */}
+        <AllToolsTopAd />
+
         {/* Category Filter Pills */}
         <div className="flex items-center justify-center flex-wrap gap-2 pt-2">
           {categories.map((cat) => (
@@ -777,6 +782,9 @@ export default function PdfToolsHub() {
             );
           })}
         </div>
+
+        {/* AdSense Bottom Banner */}
+        <AllToolsBottomAd />
       </main>
     </div>
   );

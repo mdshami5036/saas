@@ -19,22 +19,22 @@ export default function ParticleBackground() {
     window.addEventListener('resize', handleResize);
 
     // Mouse position for interactive particle reaction
-    const mouse = { x: width / 2, y: height / 2, radius: 120 };
+    const mouse = { x: width / 2, y: height / 2, radius: 140 };
     const handleMouseMove = (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Create 45 colorful glowing particles/droplets
+    // Create 45 colorful glowing particles/droplets for Light Theme
     const particles = [];
     const colors = [
-      'rgba(56, 189, 248, 0.4)',  // Cyan
-      'rgba(16, 185, 129, 0.35)', // Emerald
-      'rgba(168, 85, 247, 0.35)', // Amethyst Purple
-      'rgba(249, 115, 22, 0.35)', // Sunset Orange
-      'rgba(236, 72, 153, 0.35)', // Rose Pink
-      'rgba(245, 158, 11, 0.35)', // Gold Amber
+      'rgba(16, 185, 129, 0.45)', // Mint Emerald Green
+      'rgba(2, 132, 199, 0.45)',  // Sky Cyan
+      'rgba(124, 58, 237, 0.35)', // Amethyst Violet
+      'rgba(234, 88, 12, 0.35)',  // Sunset Orange
+      'rgba(236, 72, 153, 0.35)', // Soft Rose
+      'rgba(217, 119, 6, 0.45)',  // Golden Amber
     ];
 
     for (let i = 0; i < 45; i++) {
@@ -68,18 +68,18 @@ export default function ParticleBackground() {
 
         if (dist < mouse.radius) {
           const force = (mouse.radius - dist) / mouse.radius;
-          p.radius = p.baseRadius + force * 6;
-          p.x -= (dx / dist) * force * 1.5;
-          p.y -= (dy / dist) * force * 1.5;
+          p.radius = p.baseRadius + force * 7;
+          p.x -= (dx / dist) * force * 1.6;
+          p.y -= (dy / dist) * force * 1.6;
         } else if (p.radius > p.baseRadius) {
           p.radius -= 0.1;
         }
 
-        // Draw particle with subtle outer glow
+        // Draw particle with subtle soft outer shadow
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = p.color;
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -101,7 +101,7 @@ export default function ParticleBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
-      style={{ opacity: 0.85 }}
+      style={{ opacity: 0.8 }}
     />
   );
 }

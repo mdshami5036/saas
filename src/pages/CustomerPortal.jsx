@@ -14,6 +14,8 @@ import {
   Zap,
   AlertCircle,
 } from 'lucide-react';
+import AllToolsTopAd from '../components/AllToolsTopAd';
+import AllToolsBottomAd from '../components/AllToolsBottomAd';
 
 export default function CustomerPortal() {
   const { slug } = useParams();
@@ -335,9 +337,12 @@ export default function CustomerPortal() {
             {safeCafeInfo.name}
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
-            Fast PDF upload, customize pages, pay online & print instantly!
+            Fast PDF upload, customize pages, pay online &amp; print instantly!
           </p>
         </div>
+
+        {/* AdSense Top Banner (Hidden after file upload so user can focus on PDF preview) */}
+        {!uploadedFile && <AllToolsTopAd />}
 
         {/* Error Notification Banner */}
         {paymentErrorMessage && (
@@ -568,6 +573,8 @@ export default function CustomerPortal() {
           onClose={() => setActiveJobId(null)}
         />
       )}
+      {/* AdSense Bottom Banner */}
+      <AllToolsBottomAd />
     </div>
   );
 }

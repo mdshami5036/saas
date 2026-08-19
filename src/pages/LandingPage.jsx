@@ -60,8 +60,8 @@ export default function LandingPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#040914',
-      color: '#f8fafc',
+      background: 'transparent',
+      color: '#0f172a',
       fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
       overflowX: 'hidden',
     }}>
@@ -73,32 +73,26 @@ export default function LandingPage() {
           50% { transform: translateY(-12px) rotate(1deg); }
         }
         @keyframes pulseGlow {
-          0%, 100% { opacity: 0.4; filter: blur(40px); }
-          50% { opacity: 0.7; filter: blur(60px); }
-        }
-        @keyframes scanLine {
-          0% { top: 0%; opacity: 0; }
-          50% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+          0%, 100% { opacity: 0.5; filter: blur(40px); }
+          50% { opacity: 0.85; filter: blur(60px); }
         }
 
         .anim-float { animation: floatSlow 4s ease-in-out infinite; }
         .anim-glow { animation: pulseGlow 6s ease-in-out infinite; }
-        .anim-scan { animation: scanLine 2.5s linear infinite; }
 
         .glass-card {
-          background: rgba(15, 23, 42, 0.65);
+          background: rgba(255, 255, 255, 0.92);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(16, 185, 129, 0.18);
+          box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
         }
         .glass-card:hover {
-          border-color: rgba(37, 99, 235, 0.35);
-          box-shadow: 0 20px 60px rgba(37, 99, 235, 0.15);
+          border-color: rgba(16, 185, 129, 0.45);
+          box-shadow: 0 20px 60px rgba(16, 185, 129, 0.15);
         }
         .gradient-text {
-          background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+          background: linear-gradient(135deg, #059669 0%, #0284c7 50%, #ea580c 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -108,7 +102,7 @@ export default function LandingPage() {
         }
         .btn-glow:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5);
+          box-shadow: 0 10px 30px rgba(5, 150, 105, 0.4);
         }
       `}</style>
 
@@ -147,7 +141,7 @@ export default function LandingPage() {
           <h1 style={{
             fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 900,
             fontFamily: "'Outfit', sans-serif", lineHeight: 1.1,
-            letterSpacing: '-0.03em', margin: '0 0 24px',
+            letterSpacing: '-0.03em', margin: '0 0 24px', color: '#0f172a',
           }}>
             Apni Dukan Ko Banayein <br />
             <span className="gradient-text">24/7 Smart Cloud Print Center</span>
@@ -155,11 +149,11 @@ export default function LandingPage() {
 
           {/* Subheadline */}
           <p style={{
-            fontSize: 'clamp(16px, 2vw, 20px)', color: '#94a3b8',
-            maxWidth: '740px', margin: '0 auto 40px', lineHeight: 1.6, fontWeight: 500,
+            fontSize: 'clamp(16px, 2vw, 20px)', color: '#334155',
+            maxWidth: '740px', margin: '0 auto 40px', lineHeight: 1.6, fontWeight: 600,
           }}>
             Na WhatsApp transfer ka jhanjhat, na Pendrive ka khatra!
-            Customer QR scan karega, PDF upload karega, online pay karega aur <strong style={{ color: '#f8fafc' }}>30 seconds me print</strong> le jayega!
+            Customer QR scan karega, PDF upload karega, online pay karega aur <strong style={{ color: '#059669' }}>30 seconds me print</strong> le jayega!
           </p>
 
           {/* CTA Buttons */}
@@ -169,9 +163,9 @@ export default function LandingPage() {
               className="btn-glow"
               style={{
                 padding: '16px 36px', borderRadius: 16, fontSize: 16, fontWeight: 800,
-                color: '#ffffff', background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
+                color: '#ffffff', background: 'linear-gradient(135deg, #059669, #0284c7)',
                 border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                boxShadow: '0 10px 30px rgba(37, 99, 235, 0.4)',
+                boxShadow: '0 10px 30px rgba(5, 150, 105, 0.4)',
               }}
             >
               Start Free Trial Now <ArrowRight size={18} />
@@ -181,9 +175,10 @@ export default function LandingPage() {
               onClick={() => navigate('/login')}
               style={{
                 padding: '16px 32px', borderRadius: 16, fontSize: 16, fontWeight: 700,
-                color: '#f8fafc', background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.12)', cursor: 'pointer',
+                color: '#0f172a', background: 'rgba(255, 255, 255, 0.85)',
+                border: '1px solid rgba(16, 185, 129, 0.3)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s',
+                boxShadow: '0 4px 15px rgba(15, 23, 42, 0.05)',
               }}
             >
               Login to Dashboard
@@ -196,45 +191,45 @@ export default function LandingPage() {
             textAlign: 'left', position: 'relative', overflow: 'hidden',
           }}>
             {/* Top Bar of Demo Card */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 16, marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(16, 185, 129, 0.15)', paddingBottom: 16, marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444' }} />
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }} />
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#10b981' }} />
                 </div>
-                <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Live WevePrint Kiosk Simulator</span>
+                <span style={{ fontSize: 13, color: '#334155', fontWeight: 700 }}>Live WevePrint Kiosk Simulator</span>
               </div>
-              <span style={{ fontSize: 12, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '4px 10px', borderRadius: 20, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} /> System Online
+              <span style={{ fontSize: 12, color: '#059669', background: 'rgba(16,185,129,0.12)', padding: '4px 10px', borderRadius: 20, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669' }} /> System Online
               </span>
             </div>
 
             {/* Grid Preview inside Hero Kiosk Simulator */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
               {/* Step 1 Preview */}
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 18, padding: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 18, padding: 20, border: '1px solid rgba(16,185,129,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(56,189,248,0.15)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(2,132,199,0.15)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <QrCode size={18} />
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc' }}>1. Customer Scans QR</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>1. Customer Scans QR</span>
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 12, color: '#475569', margin: 0, lineHeight: 1.5 }}>
                   Dukan ke counter par rakhe QR Standee ko mobile camera se scan karta hai.
                 </p>
               </div>
 
               {/* Step 2 Preview */}
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 18, padding: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 18, padding: 20, border: '1px solid rgba(16,185,129,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(129,140,248,0.15)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(124,58,237,0.15)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <UploadCloud size={18} />
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc' }}>2. Uploads PDF File</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>2. Uploads PDF File</span>
                 </div>
-                <p style={{ fontSize: 12, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-                  PDF select karke B&W (₹2) ya Full Color (₹10) options chunata hai.
+                <p style={{ fontSize: 12, color: '#475569', margin: 0, lineHeight: 1.5 }}>
+                  PDF select karke B&amp;W (₹2) ya Full Color (₹10) options chunata hai.
                 </p>
               </div>
 
