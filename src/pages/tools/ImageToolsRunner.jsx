@@ -93,14 +93,20 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
       return;
     }
 
-    const processedList = validImages.map((file, idx) => ({
-      id: `${file.name}-${Date.now()}-${idx}`,
-      file,
-      name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(2),
-      rawSize: file.size,
-      url: URL.createObjectURL(file),
-    }));
+    const processedList = validImages.map((file, idx) => {
+      const mb = (file.size / (1024 * 1024)).toFixed(2);
+      const kb = (file.size / 1024).toFixed(1);
+      return {
+        id: `${file.name}-${Date.now()}-${idx}`,
+        file,
+        name: file.name,
+        sizeMB: `${mb} MB`,
+        sizeKB: `${kb} KB`,
+        formattedSize: `${mb} MB (${kb} KB)`,
+        rawSize: file.size,
+        url: URL.createObjectURL(file),
+      };
+    });
 
     setFiles(processedList);
     setPreviewSrc(processedList[0].url);
@@ -471,7 +477,22 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
       const url = URL.createObjectURL(outputBlob);
       setResultBlobUrl(url);
       setResultFileName(outputName);
-      setResultStats(stats);
+
+      // Real Size & Saved % calculation
+      const origBytes = files[0]?.rawSize || files[0]?.file?.size || 0;
+      const resBytes = outputBlob.size || 0;
+      const origMB = (origBytes / (1024 * 1024)).toFixed(2);
+      const origKB = (origBytes / 1024).toFixed(1);
+      const resMB = (resBytes / (1024 * 1024)).toFixed(2);
+      const resKB = (resBytes / 1024).toFixed(1);
+      const savedPerc = origBytes > 0 ? Math.max(0, Math.round(((origBytes - resBytes) / origBytes) * 100)) : 0;
+
+      setResultStats({
+        original: `${origMB} MB (${origKB} KB)`,
+        result: `${resMB} MB (${resKB} KB)`,
+        saved: `${savedPerc}%`,
+      });
+
       setViewState('SUCCESS');
     } catch (err) {
       console.error(`${toolTitle} Error:`, err);
@@ -608,7 +629,7 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                 </div>
 
                 <div className="text-center text-xs font-bold text-slate-400">
-                  {files.length === 1 ? `${files[0]?.name} (${files[0]?.size} MB)` : `${files.length} images selected`}
+                  {files.length === 1 ? `${files[0]?.name} • ${files[0]?.formattedSize}` : `${files.length} images selected`}
                 </div>
               </div>
 
@@ -631,17 +652,21 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
                       onChange={(e) => setQuality(parseInt(e.target.value, 10))}
                       className="w-full accent-cyan-500"
                     />
-                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
+                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
                       <div className="flex justify-between text-slate-400 font-semibold">
-                        <span>Original Size:</span>
-                        <span className="text-white font-mono">{files[0]?.file ? (files[0].file.size / 1024).toFixed(1) : 0} KB</span>
+                        <span>Original File Size:</span>
+                        <span className="text-white font-mono font-bold">
+                          {files[0]?.formattedSize || '0 KB'}
+                        </span>
                       </div>
                       <div className="flex justify-between text-emerald-400 font-bold">
                         <span>Est. Output Size:</span>
-                        <span className="font-mono">~{files[0]?.file ? ((files[0].file.size / 1024) * (quality / 100)).toFixed(1) : 0} KB</span>
+                        <span className="font-mono">
+                          ~{files[0]?.file ? ((files[0].file.size / (1024 * 1024)) * (quality / 100)).toFixed(2) : 0} MB ({files[0]?.file ? ((files[0].file.size / 1024) * (quality / 100)).toFixed(1) : 0} KB)
+                        </span>
                       </div>
-                      <div className="text-[10px] text-cyan-400 font-bold text-right pt-1">
-                        Saves ~{100 - quality}% File Weight
+                      <div className="text-[11px] text-cyan-400 font-extrabold text-right pt-1 border-t border-slate-800">
+                        Saved ~{100 - quality}% File Weight
                       </div>
                     </div>
                   </div>
