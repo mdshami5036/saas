@@ -20,6 +20,7 @@ import RemovePagesTool from './pages/tools/RemovePagesTool';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
 import ImageToolsRunner from './pages/tools/ImageToolsRunner';
 import QrToolsRunner from './pages/tools/QrToolsRunner';
+import CalculatorToolsRunner from './pages/tools/CalculatorToolsRunner';
 
 // Documentation Guides Pages
 import HowQrPrintingWorks from './pages/docs/HowQrPrintingWorks';
@@ -41,6 +42,23 @@ export default function App() {
       <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
       <Route path="/tools/split-pdf" element={<SplitPdfTool />} />
       <Route path="/tools/remove-pages" element={<RemovePagesTool />} />
+
+      {/* Dedicated Calculator Tools Category */}
+      <Route path="/tools/percentage-calculator" element={<CalculatorToolsRunner toolId="percentage-calculator" toolTitle="Percentage Calculator" toolDescription="Calculate percentage values, percentage changes, and ratios easily." />} />
+      <Route path="/tools/age-calculator" element={<CalculatorToolsRunner toolId="age-calculator" toolTitle="Age Calculator" toolDescription="Find exact age in years, months, days, and total hours from date of birth." />} />
+      <Route path="/tools/date-calculator" element={<CalculatorToolsRunner toolId="date-calculator" toolTitle="Date Calculator" toolDescription="Calculate exact duration, days, and weeks between two specific dates." />} />
+      <Route path="/tools/emi-calculator" element={<CalculatorToolsRunner toolId="emi-calculator" toolTitle="EMI Calculator" toolDescription="Calculate monthly home loan, car loan, or personal loan EMI payments." />} />
+      <Route path="/tools/gst-calculator" element={<CalculatorToolsRunner toolId="gst-calculator" toolTitle="GST Calculator" toolDescription="Calculate inclusive & exclusive GST (5%, 12%, 18%, 28%) with CGST/SGST." />} />
+      <Route path="/tools/profit-loss-calculator" element={<CalculatorToolsRunner toolId="profit-loss-calculator" toolTitle="Profit & Loss Calculator" toolDescription="Calculate business profit, loss amounts, and gain percentages." />} />
+      <Route path="/tools/simple-interest-calculator" element={<CalculatorToolsRunner toolId="simple-interest-calculator" toolTitle="Simple Interest Calculator" toolDescription="Calculate simple interest earnings and total loan/deposit amounts." />} />
+      <Route path="/tools/compound-interest-calculator" element={<CalculatorToolsRunner toolId="compound-interest-calculator" toolTitle="Compound Interest Calculator" toolDescription="Calculate compound interest growth with yearly, quarterly or monthly compounding." />} />
+      <Route path="/tools/sip-calculator" element={<CalculatorToolsRunner toolId="sip-calculator" toolTitle="SIP Calculator" toolDescription="Calculate mutual fund Systemic Investment Plan (SIP) returns and wealth." />} />
+      <Route path="/tools/swp-calculator" element={<CalculatorToolsRunner toolId="swp-calculator" toolTitle="SWP Calculator" toolDescription="Calculate Systemic Withdrawal Plan (SWP) monthly payout and final balance." />} />
+      <Route path="/tools/lumpsum-calculator" element={<CalculatorToolsRunner toolId="lumpsum-calculator" toolTitle="Lumpsum Calculator" toolDescription="Calculate expected returns on one-time lump sum mutual fund investments." />} />
+      <Route path="/tools/fd-calculator" element={<CalculatorToolsRunner toolId="fd-calculator" toolTitle="FD Calculator" toolDescription="Calculate Bank Fixed Deposit (FD) maturity amount and interest earned." />} />
+      <Route path="/tools/rd-calculator" element={<CalculatorToolsRunner toolId="rd-calculator" toolTitle="RD Calculator" toolDescription="Calculate Recurring Deposit (RD) monthly investment maturity value." />} />
+      <Route path="/tools/ppf-calculator" element={<CalculatorToolsRunner toolId="ppf-calculator" toolTitle="PPF Calculator" toolDescription="Calculate Public Provident Fund (PPF) 15-year tax-free maturity wealth." />} />
+      <Route path="/tools/nps-calculator" element={<CalculatorToolsRunner toolId="nps-calculator" toolTitle="NPS Calculator" toolDescription="Calculate National Pension Scheme (NPS) retirement corpus & monthly pension." />} />
 
       {/* Dedicated QR Code Tools Category */}
       <Route path="/tools/qr-generator" element={<QrToolsRunner toolId="qr-generator" toolTitle="QR Code Generator" toolDescription="Convert any text or web URL into a high resolution QR code instantly." />} />
