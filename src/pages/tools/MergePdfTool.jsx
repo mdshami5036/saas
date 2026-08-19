@@ -48,11 +48,13 @@ export default function MergePdfTool() {
 
       // Render Page 1 Cover Thumbnail
       const page = await pdfDoc.getPage(1);
-      const viewport = page.getViewport({ scale: 0.5 });
+      const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       await page.render({ canvasContext: ctx, viewport }).promise;
       const coverUrl = canvas.toDataURL('image/png');
 

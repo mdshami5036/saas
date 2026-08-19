@@ -146,22 +146,38 @@ export default function GenericPdfTool({
       let extension = '.pdf';
       let mimeType = 'application/pdf';
 
-      // 1. PDF TO JPG / IMAGE
+      // 1. PDF TO JPG / IMAGE (3.0x 300 DPI Ultra-HD Export)
       if (lowerTitle.includes('pdf to jpg') || lowerTitle.includes('pdf to image')) {
         extension = '.jpg';
         mimeType = 'image/jpeg';
-        if (pagePreviews.length > 0) {
-          // Export first page canvas as JPG or blob
+        
+        if (firstFile.type === 'application/pdf' || firstFile.name.endsWith('.pdf')) {
+          const arrayBuffer = await firstFile.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdfDoc = await loadingTask.promise;
+          const page = await pdfDoc.getPage(1);
+          const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 300 DPI Ultra HD
+
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          await page.render({ canvasContext: ctx, viewport }).promise;
+
+          outputBlob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.98));
+        } else if (pagePreviews.length > 0) {
           const res = await fetch(pagePreviews[0].dataUrl);
           outputBlob = await res.blob();
         } else {
           const canvas = document.createElement('canvas');
-          canvas.width = 1200;
-          canvas.height = 1600;
+          canvas.width = 1800;
+          canvas.height = 2400;
           const ctx = canvas.getContext('2d');
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
-          outputBlob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.95));
+          outputBlob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.98));
         }
       }
 

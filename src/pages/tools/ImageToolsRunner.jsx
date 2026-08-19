@@ -318,18 +318,20 @@ export default function ImageToolsRunner({ toolId, toolTitle, toolDescription })
         outputName += '.pdf';
       }
 
-      // 8. PDF TO IMAGE (Real HD PDF Page Extraction)
+      // 8. PDF TO IMAGE (3.0x 300 DPI Ultra-HD Resolution Extraction)
       else if (toolId === 'pdf-to-image') {
         const arrayBuffer = await files[0].file.arrayBuffer();
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdfDoc = await loadingTask.promise;
         const page = await pdfDoc.getPage(1);
-        const viewport = page.getViewport({ scale: 2.0 }); // 2x HD Resolution
+        const viewport = page.getViewport({ scale: 3.0 }); // 3.0x 300 DPI Ultra HD
 
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         outputBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));

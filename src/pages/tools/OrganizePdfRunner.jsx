@@ -50,11 +50,13 @@ export default function OrganizePdfRunner() {
 
       for (let i = 1; i <= totalPages; i++) {
         const page = await pdfDoc.getPage(i);
-        const viewport = page.getViewport({ scale: 0.75 });
+        const viewport = page.getViewport({ scale: 1.5 });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         extractedPages.push({
