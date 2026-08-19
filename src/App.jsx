@@ -18,6 +18,7 @@ import MergePdfTool from './pages/tools/MergePdfTool';
 import SplitPdfTool from './pages/tools/SplitPdfTool';
 import RemovePagesTool from './pages/tools/RemovePagesTool';
 import GenericPdfTool from './pages/tools/GenericPdfTool';
+import ImageToolsRunner from './pages/tools/ImageToolsRunner';
 
 // Documentation Guides Pages
 import HowQrPrintingWorks from './pages/docs/HowQrPrintingWorks';
@@ -39,6 +40,21 @@ export default function App() {
       <Route path="/tools/merge-pdf" element={<MergePdfTool />} />
       <Route path="/tools/split-pdf" element={<SplitPdfTool />} />
       <Route path="/tools/remove-pages" element={<RemovePagesTool />} />
+
+      {/* Dedicated Image Tools Category */}
+      <Route path="/tools/image-compressor" element={<ImageToolsRunner toolId="image-compressor" toolTitle="Image Compressor" toolDescription="Reduce image file size while keeping high visual quality." />} />
+      <Route path="/tools/image-resizer" element={<ImageToolsRunner toolId="image-resizer" toolTitle="Image Resizer" toolDescription="Resize image dimensions (width & height) with aspect ratio control." />} />
+      <Route path="/tools/image-converter" element={<ImageToolsRunner toolId="image-converter" toolTitle="Image Converter" toolDescription="Convert images between JPG, PNG, WEBP, and BMP formats." />} />
+      <Route path="/tools/jpg-to-png" element={<ImageToolsRunner toolId="jpg-to-png" toolTitle="JPG to PNG" toolDescription="Convert JPG images into transparent lossless PNG format." />} />
+      <Route path="/tools/png-to-jpg" element={<ImageToolsRunner toolId="png-to-jpg" toolTitle="PNG to JPG" toolDescription="Convert PNG images into high-quality JPG files." />} />
+      <Route path="/tools/merge-images" element={<ImageToolsRunner toolId="merge-images" toolTitle="Merge Images" toolDescription="Combine multiple images horizontally or vertically into one image." />} />
+      <Route path="/tools/image-to-pdf" element={<ImageToolsRunner toolId="image-to-pdf" toolTitle="Image to PDF" toolDescription="Convert one or multiple images into a clean PDF document." />} />
+      <Route path="/tools/pdf-to-image" element={<ImageToolsRunner toolId="pdf-to-image" toolTitle="PDF to Image" toolDescription="Convert PDF document pages into high resolution PNG/JPG images." />} />
+      <Route path="/tools/background-remover" element={<ImageToolsRunner toolId="background-remover" toolTitle="Background Remover" toolDescription="Remove background from images and make transparent PNG cutouts." />} />
+      <Route path="/tools/image-enhancer" element={<ImageToolsRunner toolId="image-enhancer" toolTitle="Image Enhancer" toolDescription="Improve brightness, contrast, and clarity of your photos." />} />
+      <Route path="/tools/image-upscaler" element={<ImageToolsRunner toolId="image-upscaler" toolTitle="Image Upscaler" toolDescription="Upscale low-resolution images 2x or 4x without losing quality." />} />
+      <Route path="/tools/image-watermark" element={<ImageToolsRunner toolId="image-watermark" toolTitle="Image Watermark" toolDescription="Add custom text or logo watermarks onto your photos for protection." />} />
+
       <Route path="/tools/extract-pages" element={<GenericPdfTool toolTitle="Extract Pages" toolDescription="Extract specific pages from your PDF document." actionButtonText="Extract Pages" />} />
       <Route path="/tools/organize-pdf" element={<GenericPdfTool toolTitle="Organize PDF" toolDescription="Sort, re-order, rotate or delete pages inside your PDF document." actionButtonText="Organize PDF" />} />
       <Route path="/tools/scan-to-pdf" element={<GenericPdfTool toolTitle="Scan to PDF" toolDescription="Capture document scans using mobile camera or images into PDF." actionButtonText="Scan to PDF" acceptFileType="image/*" />} />
