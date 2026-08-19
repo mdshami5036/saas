@@ -21,8 +21,19 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
     { label: 'Contact', path: '/contact' },
   ];
 
+  const bannerEnabled = localStorage.getItem('weveprint_banner_enabled') !== 'false';
+  const bannerText =
+    localStorage.getItem('weveprint_banner_text') ||
+    '✨ Special Announcement: WevePrint 50+ Client-Side Tools Are Now 100% Free for Cyber Cafes!';
+
   return (
-    <header className="sticky top-0 z-50 w-full glass-nav">
+    <>
+      {bannerEnabled && (
+        <div className="w-full bg-gradient-to-r from-cyan-900 via-teal-900 to-blue-900 text-white text-[11px] font-bold py-1.5 px-4 text-center border-b border-cyan-700/60 flex items-center justify-center space-x-2 shadow-sm">
+          <span>{bannerText}</span>
+        </div>
+      )}
+      <header className="sticky top-0 z-50 w-full glass-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Left: Brand Logo */}
@@ -154,5 +165,6 @@ export default function Navbar({ tenant, isAdmin, onShowQr }) {
         </div>
       )}
     </header>
+    </>
   );
 }
