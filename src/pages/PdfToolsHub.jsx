@@ -638,9 +638,39 @@ export default function PdfToolsHub() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <SeoHead
-        title="Every tool you need to work with PDFs in one place | WevePrint"
-        description="All-in-one free online PDF suite: Merge PDF, Split PDF, Compress PDF, JPG to PDF, PDF to Word and more. 100% Free & Fast."
+        title="Every Tool You Need to Work with PDFs & Images in One Place – 100% Free | WevePrint"
+        description="Every tool you need to use PDFs & images at your fingertips. 100% FREE and easy to use! Merge, split, compress, convert, rotate, PDF to JPG 300 DPI, AI Background Remover, UPI QR Generator & EMI Calculators."
         canonicalUrl="https://weveprint.netlify.app/tools"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            {
+              '@type': 'Question',
+              name: 'Are WevePrint PDF and Image tools 100% free?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, all 50+ WevePrint PDF tools, Image converters, AI Background Remover, QR Code generators, and calculators are 100% free with zero file limits or hidden charges.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'Are my uploaded PDF files safe on WevePrint?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, WevePrint uses 100% client-side HTML5 canvas and WebAssembly processing. Your files are processed entirely locally inside your own browser and are never uploaded to any external server.',
+              },
+            },
+            {
+              '@type': 'Question',
+              name: 'Does WevePrint PDF to JPG support high resolution 300 DPI exports?',
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: 'Yes, WevePrint converts every page of a PDF document into 3.0x 300 DPI Ultra-HD JPG image files, downloading all pages directly without any ZIP files.',
+              },
+            },
+          ],
+        }}
       />
       <Navbar />
 

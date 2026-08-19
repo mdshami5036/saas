@@ -68,9 +68,23 @@ export default function LandingPage() {
       overflowX: 'hidden',
     }}>
       <SeoHead
-        title="WevePrint – Instant Self-Service Cloud Printing Platform & Free Web Tools"
+        title="WevePrint – Smart Cloud Printing Platform & 50+ Free PDF, Image & QR Tools"
         description="Transform your Cyber Cafe & Print Shop into a 24/7 Smart Cloud Print Center. Instant QR scanning, PDF upload, UPI payments, and 50+ free client-side PDF, Image, QR & Calculator tools."
         canonicalUrl="https://weveprint.netlify.app/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'WevePrint Cloud Printing Platform',
+          operatingSystem: 'Windows, Web, Android, iOS',
+          applicationCategory: 'BusinessApplication',
+          url: 'https://weveprint.netlify.app/',
+          description: 'WevePrint is a self-service cloud print automation platform and client-side PDF/Image editing software suite for Cyber Cafes and consumers.',
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'INR',
+          },
+        }}
       />
 
       <style>{`
