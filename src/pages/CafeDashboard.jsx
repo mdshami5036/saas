@@ -207,11 +207,9 @@ export default function CafeDashboard() {
   };
 
   const handleDownloadAgentExe = () => {
-    const backendDownloadUrl = 'https://saas-backend-lyd4.onrender.com/downloads/WevePrintAgent.exe';
     const link = document.createElement('a');
-    link.href = backendDownloadUrl;
-    link.setAttribute('download', 'WevePrintAgent.exe');
-    link.target = '_blank';
+    link.href = '/PrintAgent.exe';
+    link.setAttribute('download', 'PrintAgent.exe');
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -370,8 +368,54 @@ export default function CafeDashboard() {
               className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Download className="w-4 h-4" />
-              <span>Download WevePrint Agent</span>
+              <span>Download PrintAgent (.exe)</span>
             </button>
+          </div>
+        </div>
+
+        {/* ZERO-NODE WINDOWS AGENT SETUP BANNER */}
+        <div className="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-extrabold uppercase">
+                  Zero-Node.js Required
+                </span>
+                <span className="text-xs text-slate-400 font-mono">100% Native Windows Portable EXE</span>
+              </div>
+              <h3 className="text-lg font-black text-white">Automated Windows Laptop Print Setup</h3>
+              <p className="text-xs text-slate-300">
+                Download <span className="text-emerald-400 font-mono font-bold">PrintAgent.exe</span>, run it on your Windows PC, paste your Shop Token, and your store will instantly show <span className="text-emerald-400 font-bold">🟢 ONLINE</span>!
+              </p>
+            </div>
+
+            <button
+              onClick={handleDownloadAgentExe}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/30 flex items-center space-x-2 shrink-0 transition-transform active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PrintAgent.exe</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80 text-xs">
+            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+              <span className="text-emerald-400 font-bold font-mono">Step 1: Download</span>
+              <p className="text-slate-300 text-[11px]">Click the green button above to download single file <span className="text-white font-mono">PrintAgent.exe</span>.</p>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+              <span className="text-amber-400 font-bold font-mono">Step 2: Copy Shop Token</span>
+              <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 pt-0.5">
+                <span className="truncate max-w-[140px]">{cafe?.agentToken}</span>
+                <button onClick={() => copyToClipboard(cafe?.agentToken, 'token_banner')} className="text-slate-400 hover:text-white">
+                  {copiedKey === 'token_banner' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+              <span className="text-cyan-400 font-bold font-mono">Step 3: Paste &amp; Connect</span>
+              <p className="text-slate-300 text-[11px]">Open <span className="text-white font-mono">PrintAgent.exe</span>, paste your token, click Connect. Status turns 🟢 ONLINE!</p>
+            </div>
           </div>
         </div>
 
