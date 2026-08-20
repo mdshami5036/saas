@@ -17,10 +17,23 @@ export default function CafeLogin() {
     setLoading(true);
     setErrorMsg('');
 
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setErrorMsg('Please enter a valid registered email address.');
+      setLoading(false);
+      return;
+    }
+
+    if (!password) {
+      setErrorMsg('Please enter your account password.');
+      setLoading(false);
+      return;
+    }
+
     try {
       // Direct Strict Backend Database Authentication with bcrypt check
       const res = await api.post('/auth/login', {
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
@@ -30,12 +43,12 @@ export default function CafeLogin() {
         navigate('/dashboard');
         return;
       } else {
-        setErrorMsg(res.data?.error || 'Invalid email or password.');
+        setErrorMsg(res.data?.error || 'Invalid email or password. Only registered accounts can sign in.');
       }
     } catch (err) {
       console.error('Login error:', err);
       setErrorMsg(
-        err.response?.data?.error || 'Invalid email or password. Please check your credentials.'
+        err.response?.data?.error || 'Invalid email or password. If you do not have an account, please Register first.'
       );
     } finally {
       setLoading(false);
