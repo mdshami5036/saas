@@ -19,6 +19,14 @@ import {
   Settings,
   CreditCard,
   Lock,
+  UserCheck,
+  Key,
+  Mail,
+  Phone,
+  AlertCircle,
+  Save,
+  Globe,
+  Sliders,
 } from 'lucide-react';
 
 export default function CafeDashboard() {
@@ -39,7 +47,7 @@ export default function CafeDashboard() {
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
       return 'http://localhost:5000/api/v1';
     }
-    return 'https://saas-backend-production-5c3e.up.railway.app/api/v1';
+    return 'https://saas-backend-lyd4.onrender.com/api/v1';
   };
 
   // Auto-fix: Ensure any legacy URLs in localStorage are updated
@@ -83,8 +91,62 @@ export default function CafeDashboard() {
   const [updatingRzp, setUpdatingRzp] = useState(false);
   const [rzpSaveMsg, setRzpSaveMsg] = useState('');
 
-  // Printer selection state — MUST be at top level, before any return
+  // Dashboard Sub-Tabs State ('OVERVIEW' | 'PROFILE')
+  const [activeTab, setActiveTab] = useState('OVERVIEW');
+
+  // Change Password State
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMsg({ type: '', text: '' });
+
+    if (newPassword.length < 4) {
+      setPasswordMsg({ type: 'error', text: 'New password must be at least 4 characters long.' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'New password and confirm password do not match.' });
+      return;
+    }
+
+    setUpdatingPassword(true);
+    try {
+      const res = await api.put('/auth/password', {
+        currentPassword: oldPassword,
+        newPassword: newPassword,
+      });
+
+      if (res.data && res.data.success) {
+        setPasswordMsg({ type: 'success', text: 'Password updated successfully! Use your new password on next login.' });
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordMsg({ type: 'error', text: res.data?.error || 'Failed to update password.' });
+      }
+    } catch (err) {
+      setPasswordMsg({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to update password. Please check your current password.',
+      });
+    } finally {
+      setUpdatingPassword(false);
+      setTimeout(() => setPasswordMsg({ type: '', text: '' }), 6000);
+    }
+  };
+
+  // Printer selection state
   const [selectedPrinterState, setSelectedPrinterState] = useState('');
+  const [bwPrinterState, setBwPrinterState] = useState('');
+  const [colorPrinterState, setColorPrinterState] = useState('');
+  const [updatingPrinter, setUpdatingPrinter] = useState(false);
+  const [printerSaveMsg, setPrinterSaveMsg] = useState('');
 
   const fetchDashboard = async () => {
     const token = localStorage.getItem('tenant_token');
@@ -215,12 +277,6 @@ export default function CafeDashboard() {
     link.remove();
   };
 
-  // Printer selection state
-  const [bwPrinterState, setBwPrinterState] = useState('');
-  const [colorPrinterState, setColorPrinterState] = useState('');
-  const [updatingPrinter, setUpdatingPrinter] = useState(false);
-  const [printerSaveMsg, setPrinterSaveMsg] = useState('');
-
   const { cafe, metrics, devices } = data || {};
   const primaryDevice = devices && devices.length > 0 ? devices[0] : null;
 
@@ -260,7 +316,6 @@ export default function CafeDashboard() {
     return Array.from(new Set(['Default System Printer', ...filtered]));
   }, [devices]);
 
-  // Sync selected printer states when primaryDevice loads
   useEffect(() => {
     if (primaryDevice) {
       if (primaryDevice.selectedPrinter) setSelectedPrinterState(primaryDevice.selectedPrinter);
@@ -294,28 +349,6 @@ export default function CafeDashboard() {
     }
   };
 
-  const handleSavePrinter = async (e) => {
-    if (e) e.preventDefault();
-    setUpdatingPrinter(true);
-    setPrinterSaveMsg('');
-
-    const targetPrinter = selectedPrinterState || 'Default System Printer';
-
-    try {
-      await api.put('/cafe/printer', {
-        selectedPrinter: targetPrinter,
-        deviceId: primaryDevice?.id,
-      });
-      setPrinterSaveMsg(`Printer saved! Print jobs will automatically output on "${targetPrinter}".`);
-    } catch (err) {
-      console.warn('Printer update warning:', err.message);
-      setPrinterSaveMsg(`Saved for active session: "${targetPrinter}"`);
-    } finally {
-      setUpdatingPrinter(false);
-      setTimeout(() => setPrinterSaveMsg(''), 4000);
-    }
-  };
-
   if (loading && !data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
@@ -329,7 +362,8 @@ export default function CafeDashboard() {
       <Navbar tenant={cafe} onShowQr={() => setShowQrModal(true)} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Top Banner & Quick Actions */}
+        
+        {/* Top Header Banner & Quick Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl border border-slate-800">
           <div>
             <div className="flex items-center space-x-3 mb-1">
@@ -354,7 +388,7 @@ export default function CafeDashboard() {
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-wrap">
             <button
               onClick={() => setShowQrModal(true)}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors"
@@ -365,7 +399,7 @@ export default function CafeDashboard() {
 
             <button
               onClick={handleDownloadAgentExe}
-              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
+              className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Download className="w-4 h-4" />
               <span>Download PrintAgent (.exe)</span>
@@ -373,444 +407,525 @@ export default function CafeDashboard() {
           </div>
         </div>
 
-        {/* ZERO-NODE WINDOWS AGENT SETUP BANNER */}
-        <div className="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-extrabold uppercase">
-                  Zero-Node.js Required
-                </span>
-                <span className="text-xs text-slate-400 font-mono">100% Native Windows Portable EXE</span>
-              </div>
-              <h3 className="text-lg font-black text-white">Automated Windows Laptop Print Setup</h3>
-              <p className="text-xs text-slate-300">
-                Download <span className="text-emerald-400 font-mono font-bold">PrintAgent.exe</span>, run it on your Windows PC, paste your Shop Token, and your store will instantly show <span className="text-emerald-400 font-bold">🟢 ONLINE</span>!
-              </p>
-            </div>
+        {/* SUB-NAVIGATION TABS: OVERVIEW vs PROFILE */}
+        <div className="flex items-center space-x-3 border-b border-slate-800 pb-3">
+          <button
+            onClick={() => setActiveTab('OVERVIEW')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-2 ${
+              activeTab === 'OVERVIEW'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 scale-[1.02]'
+                : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+            }`}
+          >
+            <Printer className="w-4 h-4" />
+            <span>Overview &amp; Print Queue</span>
+          </button>
 
-            <button
-              onClick={handleDownloadAgentExe}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/30 flex items-center space-x-2 shrink-0 transition-transform active:scale-95"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download PrintAgent.exe</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80 text-xs">
-            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-              <span className="text-emerald-400 font-bold font-mono">Step 1: Download</span>
-              <p className="text-slate-300 text-[11px]">Click the green button above to download single file <span className="text-white font-mono">PrintAgent.exe</span>.</p>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-              <span className="text-amber-400 font-bold font-mono">Step 2: Copy Shop Token</span>
-              <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 pt-0.5">
-                <span className="truncate max-w-[140px]">{cafe?.agentToken}</span>
-                <button onClick={() => copyToClipboard(cafe?.agentToken, 'token_banner')} className="text-slate-400 hover:text-white">
-                  {copiedKey === 'token_banner' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-            <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-              <span className="text-cyan-400 font-bold font-mono">Step 3: Paste &amp; Connect</span>
-              <p className="text-slate-300 text-[11px]">Open <span className="text-white font-mono">PrintAgent.exe</span>, paste your token, click Connect. Status turns 🟢 ONLINE!</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setActiveTab('PROFILE')}
+            className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center space-x-2 ${
+              activeTab === 'PROFILE'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 scale-[1.02]'
+                : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            <span>My Profile &amp; Shop Settings</span>
+          </button>
         </div>
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass-card p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">TODAY'S PRINTS</span>
-              <Printer className="w-5 h-5 text-cyan-400" />
-            </div>
-            <h3 className="text-3xl font-extrabold text-white">{metrics?.todayPrintCount || 0}</h3>
-            <span className="text-[11px] text-slate-400">Completed print jobs</span>
-          </div>
+        {/* TAB 1: OVERVIEW & LIVE QUEUE */}
+        {activeTab === 'OVERVIEW' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            
+            {/* ZERO-NODE WINDOWS AGENT SETUP BANNER */}
+            <div className="glass-card p-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-extrabold uppercase">
+                      Zero-Node.js Required
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">100% Native Windows Portable EXE</span>
+                  </div>
+                  <h3 className="text-lg font-black text-white">Automated Windows Laptop Print Setup</h3>
+                  <p className="text-xs text-slate-300">
+                    Download <span className="text-emerald-400 font-mono font-bold">PrintAgent.exe</span>, run it on your Windows PC, paste your Shop Token, and your store will instantly show <span className="text-emerald-400 font-bold">🟢 ONLINE</span>!
+                  </p>
+                </div>
 
-          <div className="glass-card p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">TODAY'S REVENUE</span>
-              <IndianRupee className="w-5 h-5 text-emerald-400" />
-            </div>
-            <h3 className="text-3xl font-extrabold text-emerald-400">
-              ₹{(metrics?.todayRevenue || 0).toFixed(2)}
-            </h3>
-            <span className="text-[11px] text-slate-400">Collected via Razorpay</span>
-          </div>
-
-          <div className="glass-card p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold">ACTIVE QUEUE</span>
-              <Layers className="w-5 h-5 text-amber-400" />
-            </div>
-            <h3 className="text-3xl font-extrabold text-amber-400">{metrics?.activeQueueCount || 0}</h3>
-            <span className="text-[11px] text-slate-400">Pending print queue</span>
-          </div>
-
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-extrabold text-white tracking-wider">CONNECTED PRINTERS</span>
-              <Printer className="w-5 h-5 text-cyan-400" />
-            </div>
-
-            <div className="space-y-1.5 text-xs">
-              <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span className="text-[11px] font-semibold text-slate-400">🖤 B&W:</span>
-                <span className="font-bold text-cyan-300 truncate max-w-[140px]">
-                  {bwPrinterState || 'Default System Printer'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span className="text-[11px] font-semibold text-slate-400">🎨 Color:</span>
-                <span className="font-bold text-emerald-300 truncate max-w-[140px]">
-                  {colorPrinterState || 'Default System Printer'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] pt-0.5">
-                <span className={metrics?.isAgentOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
-                  {metrics?.isAgentOnline ? `⚡ Online (${availablePrinters.length} printer(s))` : '⏸️ Agent Offline'}
-                </span>
-                {printerSaveMsg && (
-                  <span className="text-emerald-400 font-bold animate-pulse">{printerSaveMsg}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Connected Hardware Printer Selector Section (B&W + Color Dual Routing) */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-            <div className="flex items-center space-x-2">
-              <Printer className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-extrabold text-white text-base">Connected Hardware Printer Manager</h3>
-            </div>
-            {printerSaveMsg && (
-              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{printerSaveMsg}</span>
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-400 mb-4">
-            Set separate physical printers for <strong>Black & White</strong> and <strong>Color</strong> print orders. Print jobs will automatically route to the corresponding printer!
-          </p>
-
-          <form onSubmit={handleSaveDualPrinters} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Black & White Printer Dropdown */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
-                  <span>🖤 Select Black & White (B&W) Printer</span>
-                </label>
-                <select
-                  value={bwPrinterState || 'Default System Printer'}
-                  onChange={(e) => setBwPrinterState(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none cursor-pointer"
-                >
-                  {availablePrinters.map((pr) => (
-                    <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
-                      {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-[11px] text-slate-400 block">
-                  All customer B&W print jobs will automatically output on this printer.
-                </span>
-              </div>
-
-              {/* Color Printer Dropdown */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
-                  <span>🎨 Select Color Printer</span>
-                </label>
-                <select
-                  value={colorPrinterState || 'Default System Printer'}
-                  onChange={(e) => setColorPrinterState(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 font-bold text-xs focus:border-emerald-500 focus:outline-none cursor-pointer"
-                >
-                  {availablePrinters.map((pr) => (
-                    <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
-                      {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-[11px] text-slate-400 block">
-                  All customer Color print jobs will automatically output on this printer.
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={updatingPrinter}
-                className="py-2.5 px-6 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2"
-              >
-                {updatingPrinter ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Save Hardware Printer Preferences</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Credentials Section */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-            <ShieldCheck className="w-5 h-5 text-cyan-400" />
-            <h3 className="font-extrabold text-white text-base">Cyber Cafe Credentials</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Website URL */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <span className="text-xs font-semibold text-slate-400 block mb-1">Customer Website URL</span>
-              <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                <span className="text-xs font-mono text-cyan-300 truncate">{cafe?.websiteUrl}</span>
                 <button
-                  onClick={() => copyToClipboard(cafe?.websiteUrl, 'web')}
-                  className="p-1 text-slate-400 hover:text-white"
+                  onClick={handleDownloadAgentExe}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/30 flex items-center space-x-2 shrink-0 transition-transform active:scale-95"
                 >
-                  {copiedKey === 'web' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <Download className="w-4 h-4" />
+                  <span>Download PrintAgent.exe</span>
                 </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80 text-xs">
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <span className="text-emerald-400 font-bold font-mono">Step 1: Download</span>
+                  <p className="text-slate-300 text-[11px]">Click the green button above to download single file <span className="text-white font-mono">PrintAgent.exe</span>.</p>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <span className="text-amber-400 font-bold font-mono">Step 2: Copy Shop Token</span>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 pt-0.5">
+                    <span className="truncate max-w-[140px]">{cafe?.agentToken}</span>
+                    <button onClick={() => copyToClipboard(cafe?.agentToken, 'token_banner')} className="text-slate-400 hover:text-white">
+                      {copiedKey === 'token_banner' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+                  <span className="text-cyan-400 font-bold font-mono">Step 3: Paste &amp; Connect</span>
+                  <p className="text-slate-300 text-[11px]">Open <span className="text-white font-mono">PrintAgent.exe</span>, paste your token, click Connect. Status turns 🟢 ONLINE!</p>
+                </div>
               </div>
             </div>
 
-            {/* Agent Token */}
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <span className="text-xs font-semibold text-slate-400 block mb-1">Print Agent Token (ag_...)</span>
-              <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                <span className="text-xs font-mono text-amber-300 truncate">{cafe?.agentToken}</span>
-                <button
-                  onClick={() => copyToClipboard(cafe?.agentToken, 'token')}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  {copiedKey === 'token' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
+            {/* Analytics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="glass-card p-5 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-bold">TODAY'S PRINTS</span>
+                  <Printer className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h3 className="text-3xl font-extrabold text-white">{metrics?.todayPrintCount || 0}</h3>
+                <span className="text-[11px] text-slate-400">Completed print jobs</span>
+              </div>
+
+              <div className="glass-card p-5 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-bold">TODAY'S REVENUE</span>
+                  <IndianRupee className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-3xl font-extrabold text-emerald-400">
+                  ₹{(metrics?.todayRevenue || 0).toFixed(2)}
+                </h3>
+                <span className="text-[11px] text-slate-400">Collected via Razorpay</span>
+              </div>
+
+              <div className="glass-card p-5 rounded-2xl border border-slate-800">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-xs font-bold">ACTIVE QUEUE</span>
+                  <Layers className="w-5 h-5 text-amber-400" />
+                </div>
+                <h3 className="text-3xl font-extrabold text-amber-400">{metrics?.activeQueueCount || 0}</h3>
+                <span className="text-[11px] text-slate-400">Pending print queue</span>
+              </div>
+
+              <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span className="text-xs font-extrabold text-white tracking-wider">CONNECTED PRINTERS</span>
+                  <Printer className="w-5 h-5 text-cyan-400" />
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-[11px] font-semibold text-slate-400">🖤 B&amp;W:</span>
+                    <span className="font-bold text-cyan-300 truncate max-w-[140px]">
+                      {bwPrinterState || 'Default System Printer'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-[11px] font-semibold text-slate-400">🎨 Color:</span>
+                    <span className="font-bold text-emerald-300 truncate max-w-[140px]">
+                      {colorPrinterState || 'Default System Printer'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] pt-0.5">
+                    <span className={metrics?.isAgentOnline ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                      {metrics?.isAgentOnline ? `⚡ Online (${availablePrinters.length} printer(s))` : '⏸️ Agent Offline'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Razorpay Merchant Account Settings */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-            <div className="flex items-center space-x-2">
-              <CreditCard className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-extrabold text-white text-base">Razorpay Merchant Gateway Settings</h3>
-            </div>
-            {rzpSaveMsg && (
-              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{rzpSaveMsg}</span>
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-400 mb-4">
-            Enter your own Razorpay Key ID &amp; Key Secret so payments go <strong>directly to your bank account</strong>.
-          </p>
+            {/* Print Jobs History Table */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                <h3 className="font-extrabold text-white text-base">Recent Print Activity Queue</h3>
+                <button onClick={fetchDashboard} className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
 
-          <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key ID (rzp_live_...)</label>
-              <input
-                type="text"
-                required
-                placeholder="rzp_live_xxxxxxxx"
-                value={rzpKeyId}
-                onFocus={() => setIsEditingRzp(true)}
-                onChange={(e) => {
-                  setIsEditingRzp(true);
-                  setRzpKeyId(e.target.value);
-                }}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
-              <input
-                type="password"
-                placeholder="Enter Secret (leave empty if unchanged)"
-                value={rzpKeySecret}
-                onFocus={() => setIsEditingRzp(true)}
-                onChange={(e) => {
-                  setIsEditingRzp(true);
-                  setRzpKeySecret(e.target.value);
-                }}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={updatingRzp}
-              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-600/20 active:scale-95 flex items-center justify-center space-x-2"
-            >
-              {updatingRzp ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Save Merchant Account Keys</span>
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Pricing Configuration Form */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-            <div className="flex items-center space-x-2">
-              <Settings className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-extrabold text-white text-base">Print Pricing Settings</h3>
-            </div>
-            {saveSuccessMsg && (
-              <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{saveSuccessMsg}</span>
-              </span>
-            )}
-          </div>
-
-          <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Black &amp; White Rate (₹/page)</label>
-              <input
-                type="number"
-                step="0.5"
-                required
-                value={bwPrice}
-                onChange={(e) => setBwPrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-cyan-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Color Rate (₹/page)</label>
-              <input
-                type="number"
-                step="1"
-                required
-                value={colorPrice}
-                onChange={(e) => setColorPrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-cyan-500 focus:outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={updatingPricing}
-              className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95"
-            >
-              {updatingPricing ? 'Saving...' : 'Save New Rates'}
-            </button>
-          </form>
-        </div>
-
-        {/* Print Jobs History Table */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-            <h3 className="font-extrabold text-white text-base">Recent Print Activity</h3>
-            <button onClick={fetchDashboard} className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="p-3">Customer</th>
-                  <th className="p-3">Document</th>
-                  <th className="p-3">Pages / Copies</th>
-                  <th className="p-3">Mode</th>
-                  <th className="p-3">Amount</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {jobs.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-8 text-slate-500">
-                      No print jobs received yet today.
-                    </td>
-                  </tr>
-                ) : (
-                  jobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-slate-900/50">
-                      <td className="p-3 font-semibold text-white">{job.customerName}</td>
-                      <td className="p-3 truncate max-w-[160px] text-cyan-300">{job.originalName}</td>
-                      <td className="p-3">
-                        {job.pagesToPrint} ({job.copies}x)
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            job.colorMode === 'COLOR'
-                              ? 'bg-purple-950 text-purple-300 border border-purple-800'
-                              : 'bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          {job.colorMode}
-                        </span>
-                      </td>
-                      <td className="p-3 font-bold text-emerald-400">₹{job.totalPrice}</td>
-                      <td className="p-3">
-                        <span
-                          className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            job.jobStatus === 'COMPLETED'
-                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-                              : job.jobStatus === 'FAILED'
-                              ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
-                              : job.jobStatus === 'SENT_TO_AGENT' || job.jobStatus === 'PRINTING'
-                              ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-700 animate-pulse'
-                              : 'bg-amber-950/80 text-amber-300 border border-amber-800'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            job.jobStatus === 'COMPLETED' ? 'bg-emerald-400' :
-                            job.jobStatus === 'FAILED' ? 'bg-rose-400' : 'bg-cyan-400 animate-ping'
-                          }`} />
-                          <span>
-                            {job.jobStatus === 'COMPLETED' ? 'Printed & Done' :
-                             job.jobStatus === 'FAILED' ? `⚠️ Failed: ${job.errorMessage || 'Hardware Printer Needed'}` :
-                             job.jobStatus === 'SENT_TO_AGENT' ? 'Sent to Laptop Printer' :
-                             job.jobStatus === 'PRINTING' ? 'Printing Now...' :
-                             job.jobStatus === 'PENDING' ? 'Queued' : job.jobStatus}
-                          </span>
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-400">
-                        {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-950 text-slate-400 uppercase font-semibold">
+                    <tr>
+                      <th className="p-3">Customer</th>
+                      <th className="p-3">Document</th>
+                      <th className="p-3">Pages / Copies</th>
+                      <th className="p-3">Mode</th>
+                      <th className="p-3">Amount</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Time</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </main>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {jobs.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="text-center py-8 text-slate-500">
+                          No print jobs received yet today.
+                        </td>
+                      </tr>
+                    ) : (
+                      jobs.map((j) => (
+                        <tr key={j.id} className="hover:bg-slate-900/50">
+                          <td className="p-3 font-semibold text-white">{j.customerName || 'Walk-in Customer'}</td>
+                          <td className="p-3 font-mono text-cyan-300 truncate max-w-[180px]">{j.fileName}</td>
+                          <td className="p-3">{j.totalPages} pages × {j.copies} copies</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${j.colorMode === 'COLOR' ? 'bg-amber-950 text-amber-400 border border-amber-800' : 'bg-slate-800 text-slate-300'}`}>
+                              {j.colorMode}
+                            </span>
+                          </td>
+                          <td className="p-3 font-bold text-emerald-400">₹{(j.totalAmount || 0).toFixed(2)}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${j.status === 'COMPLETED' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : j.status === 'PRINTING' ? 'bg-cyan-950 text-cyan-400 border border-cyan-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}`}>
+                              {j.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-400">{new Date(j.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-      {/* QR Code Modal */}
-      {showQrModal && (
-        <QrCodeModal
-          cafeName={cafe?.name}
-          websiteUrl={cafe?.websiteUrl}
-          bwPrice={cafe?.bwPricePerPage || 2.0}
-          colorPrice={cafe?.colorPricePerPage || 10.0}
-          onClose={() => setShowQrModal(false)}
-        />
-      )}
+          </div>
+        )}
+
+        {/* TAB 2: MY PROFILE & SHOP SETTINGS */}
+        {activeTab === 'PROFILE' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            
+            {/* 1. SHOP PROFILE & ACCOUNT CREDENTIALS */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+                <UserCheck className="w-5 h-5 text-cyan-400" />
+                <h3 className="font-extrabold text-white text-base">Cyber Cafe Shop Profile Credentials</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Shop Name */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-xs font-semibold text-slate-400 block">Shop / Cyber Cafe Name</span>
+                  <div className="text-sm font-extrabold text-white flex items-center justify-between">
+                    <span>{cafe?.name}</span>
+                    <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-[10px] text-cyan-400 font-mono uppercase">Verified Account</span>
+                  </div>
+                </div>
+
+                {/* Account Email */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-xs font-semibold text-slate-400 block">Account Email Address</span>
+                  <div className="text-sm font-extrabold text-slate-200 flex items-center space-x-2">
+                    <Mail className="w-4 h-4 text-cyan-400" />
+                    <span>{cafe?.email}</span>
+                  </div>
+                </div>
+
+                {/* Website URL */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <span className="text-xs font-semibold text-slate-400 block mb-1">Customer Online Website URL</span>
+                  <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
+                    <span className="text-xs font-mono text-cyan-300 truncate">{cafe?.websiteUrl}</span>
+                    <button
+                      onClick={() => copyToClipboard(cafe?.websiteUrl, 'web')}
+                      className="p-1 text-slate-400 hover:text-white"
+                    >
+                      {copiedKey === 'web' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Print Agent Token */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <span className="text-xs font-semibold text-slate-400 block mb-1">Print Agent Token (ag_...)</span>
+                  <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
+                    <span className="text-xs font-mono text-amber-300 truncate">{cafe?.agentToken}</span>
+                    <button
+                      onClick={() => copyToClipboard(cafe?.agentToken, 'token')}
+                      className="p-1 text-slate-400 hover:text-white"
+                    >
+                      {copiedKey === 'token' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. CHANGE PASSWORD FORM */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <Key className="w-5 h-5 text-amber-400" />
+                  <h3 className="font-extrabold text-white text-base">Change Account Password</h3>
+                </div>
+                {passwordMsg.text && (
+                  <span className={`text-xs font-bold px-3 py-1 rounded-lg border ${passwordMsg.type === 'success' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800'}`}>
+                    {passwordMsg.text}
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Current Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="At least 4 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Confirm New Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={updatingPassword}
+                    className="py-2.5 px-6 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 transition-all shadow-md shadow-amber-500/20 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50"
+                  >
+                    {updatingPassword ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        <span>Update Account Password</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* 3. PRINT PRICING CONFIGURATION FORM */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <Settings className="w-5 h-5 text-cyan-400" />
+                  <h3 className="font-extrabold text-white text-base">Print Pricing Settings</h3>
+                </div>
+                {saveSuccessMsg && (
+                  <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{saveSuccessMsg}</span>
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleUpdatePricing} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Black &amp; White Rate (₹/page)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    required
+                    value={bwPrice}
+                    onChange={(e) => setBwPrice(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-cyan-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Color Rate (₹/page)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    required
+                    value={colorPrice}
+                    onChange={(e) => setColorPrice(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-cyan-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={updatingPricing}
+                  className="py-2.5 px-4 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95"
+                >
+                  {updatingPricing ? 'Saving...' : 'Save New Rates'}
+                </button>
+              </form>
+            </div>
+
+            {/* 4. RAZORPAY MERCHANT GATEWAY SETTINGS */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="w-5 h-5 text-emerald-400" />
+                  <h3 className="font-extrabold text-white text-base">Razorpay Merchant Gateway Credentials</h3>
+                </div>
+                {rzpSaveMsg && (
+                  <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{rzpSaveMsg}</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                Enter your own Razorpay Key ID &amp; Key Secret so payments go <strong>directly to your bank account</strong>.
+              </p>
+
+              <form onSubmit={handleUpdateRazorpay} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key ID (rzp_live_...)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="rzp_live_xxxxxxxx"
+                    value={rzpKeyId}
+                    onFocus={() => setIsEditingRzp(true)}
+                    onChange={(e) => {
+                      setIsEditingRzp(true);
+                      setRzpKeyId(e.target.value);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
+                  <input
+                    type="password"
+                    placeholder="Enter Secret (leave empty if unchanged)"
+                    value={rzpKeySecret}
+                    onFocus={() => setIsEditingRzp(true)}
+                    onChange={(e) => {
+                      setIsEditingRzp(true);
+                      setRzpKeySecret(e.target.value);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={updatingRzp}
+                  className="py-2.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-600/20 active:scale-95 flex items-center justify-center space-x-2"
+                >
+                  {updatingRzp ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Save Merchant Account Keys</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* 5. CONNECTED HARDWARE PRINTER MANAGER */}
+            <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <Printer className="w-5 h-5 text-cyan-400" />
+                  <h3 className="font-extrabold text-white text-base">Connected Hardware Printer Manager</h3>
+                </div>
+                {printerSaveMsg && (
+                  <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{printerSaveMsg}</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400">
+                Set separate physical printers for <strong>Black &amp; White</strong> and <strong>Color</strong> print orders. Print jobs will automatically route to the corresponding printer!
+              </p>
+
+              <form onSubmit={handleSaveDualPrinters} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Black & White Printer Dropdown */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
+                      <span>🖤 Select Black &amp; White (B&amp;W) Printer</span>
+                    </label>
+                    <select
+                      value={bwPrinterState || 'Default System Printer'}
+                      onChange={(e) => setBwPrinterState(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-xs focus:border-cyan-500 focus:outline-none cursor-pointer"
+                    >
+                      {availablePrinters.map((pr) => (
+                        <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                          {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Color Printer Dropdown */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="block text-xs font-extrabold text-slate-200 flex items-center space-x-1">
+                      <span>🎨 Select Color Printer</span>
+                    </label>
+                    <select
+                      value={colorPrinterState || 'Default System Printer'}
+                      onChange={(e) => setColorPrinterState(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 font-bold text-xs focus:border-emerald-500 focus:outline-none cursor-pointer"
+                    >
+                      {availablePrinters.map((pr) => (
+                        <option key={pr} value={pr} className="bg-slate-900 text-white font-medium">
+                          {pr === 'Default System Printer' ? '⚡ Default System Printer (Auto Fallback)' : `🖨️ ${pr}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={updatingPrinter}
+                    className="py-2.5 px-6 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2"
+                  >
+                    {updatingPrinter ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Save Hardware Printer Preferences</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }
