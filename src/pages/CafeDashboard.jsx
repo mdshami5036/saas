@@ -84,6 +84,41 @@ export default function CafeDashboard() {
   const [updatingPricing, setUpdatingPricing] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
 
+  // Shop Name Edit State
+  const [shopName, setShopName] = useState('');
+  const [updatingName, setUpdatingName] = useState(false);
+  const [nameSaveMsg, setNameSaveMsg] = useState('');
+
+  const handleUpdateShopName = async (e) => {
+    e.preventDefault();
+    setUpdatingName(true);
+    setNameSaveMsg('');
+
+    const trimmedName = shopName.trim();
+    if (!trimmedName) {
+      setNameSaveMsg('Please enter a valid Shop / Cyber Cafe name');
+      setUpdatingName(false);
+      return;
+    }
+
+    if (data && data.cafe) {
+      const updatedCafe = { ...data.cafe, name: trimmedName };
+      setData({ ...data, cafe: updatedCafe });
+      localStorage.setItem('demo_tenant', JSON.stringify(updatedCafe));
+    }
+
+    try {
+      await api.put('/cafe/pricing', { name: trimmedName });
+      setNameSaveMsg('Shop Name updated successfully!');
+    } catch (err) {
+      console.warn('Shop name update warning:', err.message);
+      setNameSaveMsg('Saved for active session!');
+    } finally {
+      setUpdatingName(false);
+      setTimeout(() => setNameSaveMsg(''), 4000);
+    }
+  };
+
   // Custom Razorpay credentials state
   const [rzpKeyId, setRzpKeyId] = useState('');
   const [rzpKeySecret, setRzpKeySecret] = useState('');
@@ -164,6 +199,9 @@ export default function CafeDashboard() {
         cafeData.websiteUrl = `${getOriginUrl()}/cafe/${cafeData.slug}`;
         cafeData.backendApiUrl = getApiUrl();
         setData(res.data);
+        if (!shopName && res.data.cafe.name) {
+          setShopName(res.data.cafe.name);
+        }
         setBwPrice(res.data.cafe.bwPricePerPage.toString());
         setColorPrice(res.data.cafe.colorPricePerPage.toString());
         if (!rzpKeyId && res.data.cafe.razorpayKeyId) {
@@ -608,25 +646,55 @@ export default function CafeDashboard() {
             
             {/* 1. SHOP PROFILE & ACCOUNT CREDENTIALS */}
             <div className="glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                <UserCheck className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-extrabold text-white text-base">Cyber Cafe Shop Profile Credentials</h3>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <UserCheck className="w-5 h-5 text-cyan-400" />
+                  <h3 className="font-extrabold text-white text-base">Cyber Cafe Shop Profile Credentials</h3>
+                </div>
+                {nameSaveMsg && (
+                  <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1 animate-pulse">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{nameSaveMsg}</span>
+                  </span>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Shop Name */}
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-xs font-semibold text-slate-400 block">Shop / Cyber Cafe Name</span>
-                  <div className="text-sm font-extrabold text-white flex items-center justify-between">
-                    <span>{cafe?.name}</span>
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-[10px] text-cyan-400 font-mono uppercase">Verified Account</span>
+              {/* Editable Shop / Cyber Cafe Name Form */}
+              <form onSubmit={handleUpdateShopName} className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1 flex-1">
+                    <label className="block text-xs font-bold text-slate-300">Shop / Cyber Cafe Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter Cyber Cafe Name"
+                      value={shopName || cafe?.name || ''}
+                      onChange={(e) => setShopName(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-extrabold focus:border-cyan-500 focus:outline-none"
+                    />
                   </div>
+                  <button
+                    type="submit"
+                    disabled={updatingName}
+                    className="sm:self-end py-2.5 px-5 rounded-xl font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/20 active:scale-95 flex items-center justify-center space-x-2 shrink-0"
+                  >
+                    {updatingName ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>Save Shop Name</span>
+                      </>
+                    )}
+                  </button>
                 </div>
+              </form>
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Account Email */}
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
                   <span className="text-xs font-semibold text-slate-400 block">Account Email Address</span>
-                  <div className="text-sm font-extrabold text-slate-200 flex items-center space-x-2">
+                  <div className="text-xs font-extrabold text-slate-200 flex items-center space-x-2 pt-1">
                     <Mail className="w-4 h-4 text-cyan-400" />
                     <span>{cafe?.email}</span>
                   </div>
@@ -634,7 +702,7 @@ export default function CafeDashboard() {
 
                 {/* Website URL */}
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <span className="text-xs font-semibold text-slate-400 block mb-1">Customer Online Website URL</span>
+                  <span className="text-xs font-semibold text-slate-400 block mb-1">Customer Website URL</span>
                   <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
                     <span className="text-xs font-mono text-cyan-300 truncate">{cafe?.websiteUrl}</span>
                     <button
